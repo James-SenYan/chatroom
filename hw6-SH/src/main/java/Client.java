@@ -48,10 +48,13 @@ public class Client {
       try {
         String response = client.clientIn.readLine();
         System.out.println("Response: " + response);
+        if(response.equals("logoff")){
+
+        }
       } catch (IOException e) {
         e.printStackTrace();
       }
-    }while (!cmd.equals("quit") || !cmd.equals("logoff"));
+    }while (true);
   }
 
   private void handleInputCmd(String cmd) {
