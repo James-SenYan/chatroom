@@ -40,7 +40,18 @@ public class Client {
     System.out.println("connect successful");
     printMenu();
     //read user command from terminal
-    client.handleInputCmd(scanner.nextLine());
+    String cmd = "";
+    do {
+      System.out.println("Enter cmd: ");
+      cmd = scanner.nextLine();
+      client.handleInputCmd(cmd);
+      try {
+        String response = client.clientIn.readLine();
+        System.out.println("Response: " + response);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }while (!cmd.equals("quit") || !cmd.equals("logoff"));
   }
 
   private void handleInputCmd(String cmd) {
