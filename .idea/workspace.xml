@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="68696beb-c9f5-4624-bcba-8b664e7ae7b0" name="Changes" comment="" />
+    <list default="true" id="68696beb-c9f5-4624-bcba-8b664e7ae7b0" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hw6-SH/src/main/java/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/hw6-SH/src/main/java/Client.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -254,7 +257,7 @@
       <workItem from="1638332150305" duration="900000" />
       <workItem from="1638660682472" duration="598000" />
       <workItem from="1638661300930" duration="3149000" />
-      <workItem from="1638764322430" duration="5478000" />
+      <workItem from="1638764322430" duration="8209000" />
     </task>
     <servers />
   </component>
@@ -272,7 +275,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="hw5-SH" />
+                        <option value="hw6-SH" />
                       </list>
                     </value>
                   </entry>
