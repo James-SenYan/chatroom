@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -40,7 +41,6 @@ public class Client {
       connected = client.connect();
     }while (!connected);
     System.out.println("connect successful");
-    System.out.println("Enter ? to see instructions of chatting");
 
     //read user command from terminal
     String cmd = "";
@@ -60,22 +60,20 @@ public class Client {
         break;
       }else if(cmd.contains("@user")){
         client.handleDirectMsg(tokens);
-
       }else if(cmd.contains("@all")){
         client.handleBroadcastMsg(tokens);
-
       }else if (cmd.contains("who")){
         client.handleQueryUsers(tokens);
-
       }else if (cmd.contains("!user")){
         client.handleInsultMsg(tokens);
       }
+      String response = null;
       try {
-        String response = client.clientIn.readLine();
-        System.out.println("Response: " + response);
+        response = client.clientIn.readLine();
       } catch (IOException e) {
         e.printStackTrace();
       }
+      System.out.println("Response: " + response);
     }while (true);
     //close the socket if user logs off
     try {
@@ -150,7 +148,6 @@ public class Client {
    * @param tokens user input cmd
    */
   private void handleLogoff(String[] tokens) {
-    String username = tokens[1];
     String out = Identifiers.DISCONNECT_MESSAGE + " " + username.length() + " " + username;
     try {
       this.clientOut.write(out.getBytes());
@@ -168,6 +165,7 @@ public class Client {
     this.username = username;
     String out = Identifiers.CONNECT_MESSAGE + " " + username.length() + " " + username;
     try {
+      new PrintWriter(this.clientOut, true).println(out);
       this.clientOut.write(out.getBytes());
     } catch (IOException e) {
       e.printStackTrace();

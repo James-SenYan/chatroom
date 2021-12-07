@@ -38,12 +38,18 @@ public class ServerThread extends Thread {
   }
 
   private void handleRequest() throws IOException {
+    System.out.println("handle starts...");
     String input = "";
     while ((input = is.readLine()) != null){
+      System.out.println(input);
       String[] tokens = input.split(" ");
       int identifier = Integer.parseInt(tokens[0]);
+      PrintWriter out = new PrintWriter(os, true);
+      out.println("Server about to process your request, plz wait...");
+      os.write("Server about to process your request, plz wait...".getBytes());
       protocol.processInput(identifier, tokens);
     }
+    System.out.println("server input null");
   }
 
 

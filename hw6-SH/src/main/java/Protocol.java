@@ -43,5 +43,31 @@ public class Protocol {
    */
   public void processInput(int identifier, String[] tokens) throws IOException {
     this.os.write("processInput".getBytes());
+    switch (identifier){
+      case 19: handleLogin(tokens);
+      case 21: handleLogoff(tokens);
+    }
+  }
+
+  private void handleLogoff(String[] tokens) {
+    String msg = "You are no longer connected";
+    String out = Identifiers.CONNECT_RESPONSE + " " + msg.length() + " " + msg;
+    try {
+      this.os.write(out.getBytes());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void handleLogin(String[] tokens) {
+    String usernameLength = tokens[1];
+    String username = tokens[2];
+    String msg = "There are X other connected clients";
+    String out = Identifiers.CONNECT_RESPONSE + " " + msg;
+    try {
+      this.os.write(out.getBytes());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 }
