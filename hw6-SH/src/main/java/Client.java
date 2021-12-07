@@ -40,14 +40,18 @@ public class Client {
       connected = client.connect();
     }while (!connected);
     System.out.println("connect successful");
-    printMenu();
+    System.out.println("Enter ? to see instructions of chatting");
+
     //read user command from terminal
     String cmd = "";
     do {
       System.out.println("Enter cmd: ");
+      System.out.println("You can enter ? to see instruction of using chat room");
       cmd = scanner.nextLine();
       String[] tokens = cmd.split(" ");
-      if (cmd.contains("login")){
+      if (cmd.equals("?")){
+        printMenu();
+      }else if (cmd.contains("login")){
         //handle login process
         client.handleLogin(tokens);
       }else if (cmd.contains("logoff") || cmd.contains("quit")){

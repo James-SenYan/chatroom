@@ -8,8 +8,8 @@ public class ServerThread extends Thread {
 
   private Socket s;
   private Server server;
-  private DataInputStream dis;
-  private DataOutputStream dos;
+  private BufferedReader is;
+  private OutputStream os;
   private Protocol protocol;
 
   /**
@@ -22,17 +22,37 @@ public class ServerThread extends Thread {
   public ServerThread(Socket s, Server server) throws IOException {
     this.s = s;
     this.server = server;
-    this.dis = new DataInputStream(s.getInputStream());
-    this.dos = new DataOutputStream(s.getOutputStream());
-    this.protocol = new Protocol(server.getClientsMap(), dis, dos);
+    this.is = new BufferedReader(new InputStreamReader(s.getInputStream()));
+    this.os = s.getOutputStream();
+    this.protocol = new Protocol(server.getClientsMap(), is, os);
   }
 
+
   @Override
-  public void run() {
+  public void run(){
+    try {
+      handleRequest();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void handleRequest() throws IOException {
+    String input = "";
+    while ((input = is.readLine()) != null){
+      String[] tokens = input.split(" ");
+      int identifier = Integer.parseInt(tokens[0]);
+      protocol.processInput(identifier, tokens);
+    }
+  }
+
+
+  public void run2() {
     do {
       try {
-        int identifier = dis.readInt();
-        protocol.processInput(identifier);
+        //int identifier = dis.readInt();
+        int identifier = 1;
+        protocol.processInput(identifier, null);
       } catch (IOException e) {
         e.printStackTrace();
       }
@@ -43,8 +63,9 @@ public class ServerThread extends Thread {
 
     while (!s.isClosed()) {
       try {
-        int identifier = dis.readInt();
-        protocol.processInput(identifier);
+        //int identifier = dis.readInt();
+        int identifier = 1;
+        protocol.processInput(identifier, null);
       } catch (EOFException e) {
         try {
           s.close();

@@ -41,7 +41,7 @@ public class Server {
     System.out.println("Server starts running on port " + PORT_NUMBER);
     while (true) {
       Socket s = serverSocket.accept();
-      System.out.println("New client request received : " + s.getInetAddress().getHostAddress());
+      System.out.println("New client request received : " + s.getInetAddress());
       System.out.println("Preparing the chat room for this client...");
 
       ServerThread serverThread = new ServerThread(s, this);

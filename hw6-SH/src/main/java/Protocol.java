@@ -1,26 +1,28 @@
+import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Protocol {
   private String username;
   private ConcurrentHashMap<String, ServerThread> clientMap;
-  private DataInputStream dis;
-  private DataOutputStream dos;
+  private BufferedReader dis;
+  private OutputStream os;
 
   /**
    * Protocol class constructor.
    *
    * @param clientMap a ConcurrentHashMap contains all info on connected clients.
    * @param dis       server input stream.
-   * @param dos       server output stream.
+   * @param os       server output stream.
    */
-  public Protocol(ConcurrentHashMap<String, ServerThread> clientMap, DataInputStream dis, DataOutputStream dos) {
+  public Protocol(ConcurrentHashMap<String, ServerThread> clientMap, BufferedReader dis, OutputStream os) {
     this.clientMap = clientMap;
     this.dis = dis;
-    this.dos = dos;
+    this.os = os;
     this.username = null;
   }
 
@@ -39,7 +41,7 @@ public class Protocol {
    * @param identifier an integer representing message type based on given chat room protocol.
    * @throws IOException handles all messages that in incorrect format.
    */
-  public void processInput(int identifier) throws IOException {
-    System.out.println("processInput");
+  public void processInput(int identifier, String[] tokens) throws IOException {
+    this.os.write("processInput".getBytes());
   }
 }
