@@ -10,4 +10,4 @@ who --> identifier22 sizeOfUsername username(who's requesting) --> identifier23 
 
 @all msgBody --> identifier24 sizeOfSenderUsername senderName lengthOfMsg msgBody --> msg from senderName: msgBody
 
-!user username msgBody --> identifier27 sizeOfSenderUsername senderName sizeOfRecipientName recipientName insultBody --> insult from senderName: insultBody
+!user username --> identifier27 sizeOfSenderUsername senderName sizeOfRecipientName recipientName --> insult from senderName: insultBody

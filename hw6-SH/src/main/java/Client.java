@@ -4,6 +4,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 
@@ -17,6 +18,7 @@ public class Client {
   private Socket socket;
   private OutputStream clientOut;
   private BufferedReader clientIn;
+  private String username;
 
 
   public Client(String serverName, int serverPort) {
@@ -44,31 +46,140 @@ public class Client {
     do {
       System.out.println("Enter cmd: ");
       cmd = scanner.nextLine();
-      client.handleInputCmd(cmd);
+      String[] tokens = cmd.split(" ");
+      if (cmd.contains("login")){
+        //handle login process
+        client.handleLogin(tokens);
+      }else if (cmd.contains("logoff") || cmd.contains("quit")){
+        //handle logoff process
+        client.handleLogoff(tokens);
+        break;
+      }else if(cmd.contains("@user")){
+        client.handleDirectMsg(tokens);
+
+      }else if(cmd.contains("@all")){
+        client.handleBroadcastMsg(tokens);
+
+      }else if (cmd.contains("who")){
+        client.handleQueryUsers(tokens);
+
+      }else if (cmd.contains("!user")){
+        client.handleInsultMsg(tokens);
+      }
       try {
         String response = client.clientIn.readLine();
         System.out.println("Response: " + response);
-        if(response.equals("logoff")){
-
-        }
       } catch (IOException e) {
         e.printStackTrace();
       }
     }while (true);
-  }
-
-  private void handleInputCmd(String cmd) {
+    //close the socket if user logs off
     try {
-      this.clientOut.write(cmd.getBytes());
+      client.socket.close();
     } catch (IOException e) {
       e.printStackTrace();
     }
   }
 
+  /**
+   * Send a random insult to recipient
+   * @param tokens user input cmd
+   */
+  private void handleInsultMsg(String[] tokens) {
+    String recipient = tokens[1];
+    String out = Identifiers.SEND_INSULT + " " + this.username.length() + " "
+        + this.username + " " + recipient.length() + " " + recipient + " ";
+    try {
+      this.clientOut.write(out.getBytes());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Handle user query request(who)
+   * @param tokens user input cmd
+   */
+  private void handleQueryUsers(String[] tokens) {
+    String out = Identifiers.QUERY_CONNECTED_USERS + " " + this.username.length() + " " + this.username;
+    try {
+      this.clientOut.write(out.getBytes());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Handle sending a broadcast msg request
+   * @param tokens user input cmd
+   */
+  private void handleBroadcastMsg(String[] tokens) {
+    String msgBody = tokens[1];
+    String out = Identifiers.BROADCAST_MESSAGE + " "+ this.username.length() + " "
+        + this.username + " " + msgBody.length() + " " + msgBody;
+    try {
+      this.clientOut.write(out.getBytes());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Handle sending a msg directly to specific user
+   * @param tokens user input cmd
+   */
+  private void handleDirectMsg(String[] tokens) {
+    String recipient = tokens[1];
+    String msgBody = tokens[2];
+    String out = Identifiers.DIRECT_MESSAGE + " " + this.username.length() + " "
+        + this.username + " " + recipient.length() + " " + recipient + " " + msgBody.length() + " " + msgBody;
+    try {
+      this.clientOut.write(out.getBytes());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+  }
+
+  /**
+   * Handle user logging off request
+   * @param tokens user input cmd
+   */
+  private void handleLogoff(String[] tokens) {
+    String username = tokens[1];
+    String out = Identifiers.DISCONNECT_MESSAGE + " " + username.length() + " " + username;
+    try {
+      this.clientOut.write(out.getBytes());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Handle user logging in request
+   * @param tokens user input cmd
+   */
+  private void handleLogin(String[] tokens) {
+    String username = tokens[1];
+    this.username = username;
+    String out = Identifiers.CONNECT_MESSAGE + " " + username.length() + " " + username;
+    try {
+      this.clientOut.write(out.getBytes());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Print out this menu to ask users to input server name and port number
+   */
   private static void checkInMenu(){
     System.out.println("Enter server name and port number: ");
   }
 
+  /**
+   * print out this instruction menu when user types in ?
+   */
   private static void printMenu() {
     System.out.println("logoff: sends a DISCONNECT_MESSAGE to the server");
     System.out.println("who: sends a QUERY_CONNECTED_USERS to the server");
@@ -77,6 +188,10 @@ public class Client {
     System.out.println("!user: sends a SEND_INSULT message to the server, to be sent to the specified user");
   }
 
+  /**
+   * Connect client to server
+   * @return return true if it connects successfully otherwise return false
+   */
   private boolean connect(){
     try {
       //create a socket connect to the server
