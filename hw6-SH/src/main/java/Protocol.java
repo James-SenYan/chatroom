@@ -3,26 +3,27 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Protocol {
   private String username;
   private ConcurrentHashMap<String, ServerThread> clientMap;
-  private BufferedReader dis;
-  private OutputStream os;
+  private BufferedReader reader;
+  private PrintWriter out;
 
   /**
    * Protocol class constructor.
    *
    * @param clientMap a ConcurrentHashMap contains all info on connected clients.
-   * @param dis       server input stream.
-   * @param os       server output stream.
+   * @param reader       server input stream.
+   * @param out       server output stream.
    */
-  public Protocol(ConcurrentHashMap<String, ServerThread> clientMap, BufferedReader dis, OutputStream os) {
+  public Protocol(ConcurrentHashMap<String, ServerThread> clientMap, BufferedReader reader, PrintWriter out) {
     this.clientMap = clientMap;
-    this.dis = dis;
-    this.os = os;
+    this.reader = reader;
+    this.out = out;
     this.username = null;
   }
 
@@ -42,7 +43,6 @@ public class Protocol {
    * @throws IOException handles all messages that in incorrect format.
    */
   public void processInput(int identifier, String[] tokens) throws IOException {
-    this.os.write("processInput".getBytes());
     switch (identifier){
       case 19: handleLogin(tokens);
       case 21: handleLogoff(tokens);
@@ -52,11 +52,7 @@ public class Protocol {
   private void handleLogoff(String[] tokens) {
     String msg = "You are no longer connected";
     String out = Identifiers.CONNECT_RESPONSE + " " + msg.length() + " " + msg;
-    try {
-      this.os.write(out.getBytes());
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    this.out.println(out);
   }
 
   private void handleLogin(String[] tokens) {
@@ -64,10 +60,6 @@ public class Protocol {
     String username = tokens[2];
     String msg = "There are X other connected clients";
     String out = Identifiers.CONNECT_RESPONSE + " " + msg;
-    try {
-      this.os.write(out.getBytes());
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    this.out.println(out);
   }
 }

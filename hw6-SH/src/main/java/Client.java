@@ -17,7 +17,7 @@ public class Client {
   private String serverName;
   private int serverPort;
   private Socket socket;
-  private OutputStream clientOut;
+  private PrintWriter clientOut;
   private BufferedReader clientIn;
   private String username;
 
@@ -77,6 +77,7 @@ public class Client {
     }while (true);
     //close the socket if user logs off
     try {
+      System.out.println("About to log off...");
       client.socket.close();
     } catch (IOException e) {
       e.printStackTrace();
@@ -91,11 +92,7 @@ public class Client {
     String recipient = tokens[1];
     String out = Identifiers.SEND_INSULT + " " + this.username.length() + " "
         + this.username + " " + recipient.length() + " " + recipient + " ";
-    try {
-      this.clientOut.write(out.getBytes());
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    this.clientOut.println(out);
   }
 
   /**
@@ -104,11 +101,7 @@ public class Client {
    */
   private void handleQueryUsers(String[] tokens) {
     String out = Identifiers.QUERY_CONNECTED_USERS + " " + this.username.length() + " " + this.username;
-    try {
-      this.clientOut.write(out.getBytes());
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    this.clientOut.println(out);
   }
 
   /**
@@ -119,11 +112,7 @@ public class Client {
     String msgBody = tokens[1];
     String out = Identifiers.BROADCAST_MESSAGE + " "+ this.username.length() + " "
         + this.username + " " + msgBody.length() + " " + msgBody;
-    try {
-      this.clientOut.write(out.getBytes());
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    this.clientOut.println(out);
   }
 
   /**
@@ -135,11 +124,7 @@ public class Client {
     String msgBody = tokens[2];
     String out = Identifiers.DIRECT_MESSAGE + " " + this.username.length() + " "
         + this.username + " " + recipient.length() + " " + recipient + " " + msgBody.length() + " " + msgBody;
-    try {
-      this.clientOut.write(out.getBytes());
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    this.clientOut.println(out);
 
   }
 
@@ -149,11 +134,7 @@ public class Client {
    */
   private void handleLogoff(String[] tokens) {
     String out = Identifiers.DISCONNECT_MESSAGE + " " + username.length() + " " + username;
-    try {
-      this.clientOut.write(out.getBytes());
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    this.clientOut.println(out);
   }
 
   /**
@@ -164,12 +145,7 @@ public class Client {
     String username = tokens[1];
     this.username = username;
     String out = Identifiers.CONNECT_MESSAGE + " " + username.length() + " " + username;
-    try {
-      new PrintWriter(this.clientOut, true).println(out);
-      this.clientOut.write(out.getBytes());
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    this.clientOut.println(out);
   }
 
   /**
@@ -199,7 +175,7 @@ public class Client {
       //create a socket connect to the server
       socket = new Socket(InetAddress.getByName(serverName), serverPort);
       //client writes to the server
-      clientOut = socket.getOutputStream();
+      clientOut = new PrintWriter(socket.getOutputStream(), true);
       //receive message from the server
       clientIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       return true;

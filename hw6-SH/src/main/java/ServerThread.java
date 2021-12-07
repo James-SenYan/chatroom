@@ -8,8 +8,8 @@ public class ServerThread extends Thread {
 
   private Socket s;
   private Server server;
-  private BufferedReader is;
-  private OutputStream os;
+  private BufferedReader reader;
+  private PrintWriter out;
   private Protocol protocol;
 
   /**
@@ -22,9 +22,9 @@ public class ServerThread extends Thread {
   public ServerThread(Socket s, Server server) throws IOException {
     this.s = s;
     this.server = server;
-    this.is = new BufferedReader(new InputStreamReader(s.getInputStream()));
-    this.os = s.getOutputStream();
-    this.protocol = new Protocol(server.getClientsMap(), is, os);
+    this.reader = new BufferedReader(new InputStreamReader(s.getInputStream()));
+    this.out = new PrintWriter(s.getOutputStream(), true);
+    this.protocol = new Protocol(server.getClientsMap(), reader, out);
   }
 
 
@@ -40,13 +40,11 @@ public class ServerThread extends Thread {
   private void handleRequest() throws IOException {
     System.out.println("handle starts...");
     String input = "";
-    while ((input = is.readLine()) != null){
+    while ((input = reader.readLine()) != null){
       System.out.println(input);
       String[] tokens = input.split(" ");
       int identifier = Integer.parseInt(tokens[0]);
-      PrintWriter out = new PrintWriter(os, true);
       out.println("Server about to process your request, plz wait...");
-      os.write("Server about to process your request, plz wait...".getBytes());
       protocol.processInput(identifier, tokens);
     }
     System.out.println("server input null");
