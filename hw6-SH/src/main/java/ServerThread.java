@@ -58,5 +58,4 @@ public class ServerThread extends Thread {
 
     System.out.println("server input null");
   }
-
 }

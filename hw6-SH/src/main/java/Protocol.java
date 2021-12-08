@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Protocol {
@@ -15,6 +16,7 @@ public class Protocol {
   private ConcurrentHashMap<String, ServerThread> clientMap;
   private BufferedReader reader;
   private PrintWriter out;
+  public static final int MAXIMUM_CONNECTIONS = 10;
 
   /**
    * Protocol class constructor.
@@ -67,18 +69,14 @@ public class Protocol {
   public String processInput(int identifier, String[] tokens) throws IOException {
     String response = "";
     switch (identifier){
-      case 19:
+      case Identifiers.CONNECT_MESSAGE:
         response = handleLogin(tokens);
         break;
-      case 21:
+      case Identifiers.DISCONNECT_MESSAGE:
         response = handleLogoff(tokens);
         break;
-      case 22:
-        List<String> users = handleQuery(tokens);
-        for (String user: users) {
-          response += user + ", ";
-        }
-        response = response.substring(0, response.length() - 2);
+      case Identifiers.QUERY_CONNECTED_USERS:
+       response = handleQueryUsers(tokens);
         break;
     }
     return response;
@@ -92,7 +90,7 @@ public class Protocol {
       out = "Username has been used.";
     else {
       int size = this.clientMap.size();
-      if (size < 10) {
+      if (size < MAXIMUM_CONNECTIONS) {
         setUsername(username);
         out = "Hello, " + username + ". There are " + size + " other connected clients.";
         isConnected = true;
@@ -117,19 +115,28 @@ public class Protocol {
     return finalout;
   }
 
-  private List<String> handleQuery(String[] tokens) {
-    List<String> responseList = new ArrayList<>();
-    String username = tokens[2];
-    if (!this.clientMap.containsKey(username))
-      responseList.add("Non-exist username.");
-    else {
-      for (String name : this.clientMap.keySet()) {
-        if (!name.equals(username))
-          responseList.add(name);
-      }
+//  private List<String> handleQuery(String[] tokens) {
+//    List<String> responseList = new ArrayList<>();
+//    String username = tokens[2];
+//    if (!this.clientMap.containsKey(username))
+//      responseList.add("Non-exist username.");
+//    else {
+//      for (String name : this.clientMap.keySet()) {
+//        if (!name.equals(username))
+//          responseList.add(name);
+//      }
+//    }
+//    return responseList;
+//  }
+
+  private String handleQueryUsers(String[] tokens){
+    String userRequesting = tokens[2];
+    Set<String> activeUsers = this.clientMap.keySet();
+    StringBuilder out = new StringBuilder(
+        Identifiers.QUERY_USER_RESPONSE + " " + activeUsers.size());
+    for (String user : activeUsers){
+      out.append(" " + user.length() + " " +user);
     }
-
-    return responseList;
+    return out.toString();
   }
-
 }

@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -24,9 +25,9 @@ public class Server {
   }
 
   /**
-   * Returns this Server's clientsMap.
+   * Returns this Server's clientsSet.
    *
-   * @return clientsMap.
+   * @return clientsSet.
    */
   public ConcurrentHashMap<String, ServerThread> getClientsMap() {
     return clientsMap;
