@@ -59,6 +59,16 @@ public class Protocol {
     return clientMap;
   }
 
+  /**
+   * Sets this Protocol's client map.
+   *
+   * @param username a string representing username.
+   */
+  public void setClientMap(String username) {
+    ConcurrentHashMap<String, ServerThread> copy = this.clientMap;
+    copy.remove(username);
+    this.clientMap = copy;
+  }
 
   /**
    * Processes input identifier and write response based on the protocol.
@@ -109,6 +119,7 @@ public class Protocol {
     if (!this.clientMap.containsKey(username))
       out = "User doesn't exist.";
     else {
+      this.setClientMap(username);
       out = username + ", you are logged off";
     }
     String finalout = Identifiers.CONNECT_RESPONSE + " " + out.length() + " " + out;
