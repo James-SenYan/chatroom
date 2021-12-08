@@ -37,16 +37,48 @@ public class Protocol {
   }
 
   /**
+   * Sets this KKProtocol's username to input string.
+   *
+   * @param username a string representing username.
+   */
+  public void setUsername(String username) {
+    this.username = username;
+  }
+
+  /**
    * Processes input identifier and write response based on the protocol.
    *
    * @param identifier an integer representing message type based on given chat room protocol.
    * @throws IOException handles all messages that in incorrect format.
    */
-  public void processInput(int identifier, String[] tokens) throws IOException {
+  public String processInput(int identifier, String[] tokens) throws IOException {
+    String response = "";
     switch (identifier){
-      case 19: handleLogin(tokens);
-      case 21: handleLogoff(tokens);
+      case 19:
+        response = handleLogin(tokens);
+        break;
+      case 21:
+        handleLogoff(tokens);
+        break;
     }
+    return response;
+  }
+
+  private String handleLogin(String[] tokens) {
+    String username = tokens[2];
+    String out;
+    if (this.clientMap.containsKey(username))
+      out = "Username has been used.";
+    else {
+      int size = this.clientMap.size();
+      if (size < 10) {
+        setUsername(username);
+        out = "There are " + size + " other connected clients.";
+      } else {
+        out = "Chat room is full. Retry later.";
+      }
+    }
+    return out;
   }
 
   private void handleLogoff(String[] tokens) {
@@ -55,11 +87,4 @@ public class Protocol {
     this.out.println(out);
   }
 
-  private void handleLogin(String[] tokens) {
-    String usernameLength = tokens[1];
-    String username = tokens[2];
-    String msg = "There are X other connected clients";
-    String out = Identifiers.CONNECT_RESPONSE + " " + msg;
-    this.out.println(out);
-  }
 }

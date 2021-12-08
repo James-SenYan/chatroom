@@ -38,14 +38,16 @@ public class ServerThread extends Thread {
   }
 
   private void handleRequest() throws IOException {
-    System.out.println("handle starts...");
     String input = "";
     while ((input = reader.readLine()) != null){
       System.out.println(input);
       String[] tokens = input.split(" ");
       int identifier = Integer.parseInt(tokens[0]);
-      out.println("Server about to process your request, plz wait...");
-      protocol.processInput(identifier, tokens);
+//      out.println("Server about to process your request, plz wait...");
+      out.println(protocol.processInput(identifier, tokens));
+      System.out.println("The protocol username is : " + protocol.getUsername());
+      this.server.getClientsMap().put(protocol.getUsername(), this);
+      System.out.println("The clientmap size is : " + this.server.getClientsMap().size());
     }
     System.out.println("server input null");
   }
