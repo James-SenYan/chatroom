@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Protocol {
@@ -55,13 +56,13 @@ public class Protocol {
   public String processInput(int identifier, String[] tokens) throws IOException {
     String response = "";
     switch (identifier){
-      case 19:
+      case Identifiers.CONNECT_MESSAGE:
         response = handleLogin(tokens);
         break;
-      case 21:
+      case Identifiers.DISCONNECT_MESSAGE:
         handleLogoff(tokens);
         break;
-      case 22:
+      case Identifiers.QUERY_CONNECTED_USERS:
         handleQueryUsers(tokens);
         break;
     }
@@ -85,14 +86,20 @@ public class Protocol {
     return out;
   }
 
-  private void handleLogoff(String[] tokens) {
+  private String handleLogoff(String[] tokens) {
     String msg = "You are no longer connected";
     String out = Identifiers.CONNECT_RESPONSE + " " + msg.length() + " " + msg;
-    this.out.println(out);
+    return out;
   }
 
-  private void handleQueryUsers(String[] tokens){
-
+  private String handleQueryUsers(String[] tokens){
+    String userRequesting = tokens[2];
+    Set<String> activeUsers = this.clientMap.keySet();
+    StringBuilder out = new StringBuilder(
+        Identifiers.QUERY_USER_RESPONSE + " " + activeUsers.size());
+    for (String user : activeUsers){
+      out.append(" " + user.length() + " " +user);
+    }
+    return out.toString();
   }
-
 }

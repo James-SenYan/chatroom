@@ -54,11 +54,14 @@ public class Client {
     while(true){
       handleCmdFromUser(client);
       String fromServer = clientIn.readLine();
-      System.out.println("response:" + fromServer);
+      //System.out.println("response:" + fromServer);
       int identifier = Integer.parseInt(fromServer.split(" ")[0]);
       if (identifier == Identifiers.DISCONNECT_MESSAGE){
         System.out.println("About to log off...");
         break;
+      }
+      if (identifier == Identifiers.QUERY_USER_RESPONSE){
+        System.out.println(fromServer);
       }
     }
     System.out.println("nothing from server...");
