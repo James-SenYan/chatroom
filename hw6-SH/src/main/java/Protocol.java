@@ -81,6 +81,7 @@ public class Protocol {
     switch (identifier){
       case Identifiers.CONNECT_MESSAGE:
         response = handleLogin(tokens);
+        System.out.println("THIS GOT CALLED FOR LOGIN");
         break;
       case Identifiers.DISCONNECT_MESSAGE:
         response = handleLogoff(tokens);
@@ -120,7 +121,8 @@ public class Protocol {
       out = "User doesn't exist.";
     else {
       this.setClientMap(username);
-      out = username + ", you are logged off";
+      this.setUsername(null);
+      out = "You are no longer connected";
     }
     String finalout = Identifiers.CONNECT_RESPONSE + " " + out.length() + " " + out;
     return finalout;
