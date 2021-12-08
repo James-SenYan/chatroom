@@ -20,9 +20,12 @@ public class Client {
   private PrintWriter clientOut;
   private BufferedReader clientIn;
   private String username;
+  private boolean logged;
+  static Scanner scanner = new Scanner(System.in);
 
 
   public Client(String serverName, int serverPort) {
+    this.logged = false;
     this.serverName = serverName;
     this.serverPort = serverPort;
   }
@@ -30,7 +33,6 @@ public class Client {
   public static void main(String[] args) {
     boolean connected = false;
     Client client = null;
-    Scanner scanner = new Scanner(System.in);
     do {
       //ask users to enter serverName and portNumber
       checkInMenu();
@@ -41,46 +43,50 @@ public class Client {
       connected = client.connect();
     }while (!connected);
     System.out.println("connect successful");
-
-    //read user command from terminal
-    String cmd = "";
-    do {
-      System.out.println("Enter cmd: ");
-      System.out.println("You can enter ? to see instruction of using chat room");
-      cmd = scanner.nextLine();
-      String[] tokens = cmd.split(" ");
-      if (cmd.equals("?")){
-        printMenu();
-      }else if (cmd.contains("login")){
-        //handle login process
-        client.handleLogin(tokens);
-      }else if (cmd.contains("logoff") || cmd.contains("quit")){
-        //handle logoff process
-        client.handleLogoff(tokens);
-        break;
-      }else if(cmd.contains("@user")){
-        client.handleDirectMsg(tokens);
-      }else if(cmd.contains("@all")){
-        client.handleBroadcastMsg(tokens);
-      }else if (cmd.contains("who")){
-        client.handleQueryUsers(tokens);
-      }else if (cmd.contains("!user")){
-        client.handleInsultMsg(tokens);
-      }
-      String response = null;
-      try {
-        response = client.clientIn.readLine();
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-      System.out.println("Response: " + response);
-    }while (true);
-    //close the socket if user logs off
     try {
-      System.out.println("About to log off...");
-      client.socket.close();
+      client.handleResponseFromServer(client);
     } catch (IOException e) {
       e.printStackTrace();
+    }
+  }
+
+  private void handleResponseFromServer(Client client) throws IOException {
+    while(true){
+      handleCmdFromUser(client);
+      String fromServer = clientIn.readLine();
+      System.out.println("response:" + fromServer);
+      int identifier = Integer.parseInt(fromServer.split(" ")[0]);
+      if (identifier == Identifiers.DISCONNECT_MESSAGE){
+        System.out.println("About to log off...");
+        break;
+      }
+    }
+    System.out.println("nothing from server...");
+  }
+
+  private void handleCmdFromUser(Client client){
+    //read user command from terminal
+    String cmd = "";
+    System.out.println("Enter cmd: ");
+    System.out.println("You can enter ? to see instruction of using chat room");
+    cmd = scanner.nextLine();
+    String[] tokens = cmd.split(" ");
+    if (cmd.equals("?")){
+      printMenu();
+    }else if (cmd.contains("login") && !client.logged ){//one client can only log once
+      //handle login process
+      client.handleLogin(tokens);
+    }else if (cmd.contains("logoff") || cmd.contains("quit")){
+      //handle logoff process
+      client.handleLogoff(tokens);
+    }else if(cmd.contains("@user")){
+      client.handleDirectMsg(tokens);
+    }else if(cmd.contains("@all")){
+      client.handleBroadcastMsg(tokens);
+    }else if (cmd.contains("who")){
+      client.handleQueryUsers(tokens);
+    }else if (cmd.contains("!user")){
+      client.handleInsultMsg(tokens);
     }
   }
 
@@ -142,6 +148,7 @@ public class Client {
    * @param tokens user input cmd
    */
   private void handleLogin(String[] tokens) {
+    this.logged = true;
     String username = tokens[1];
     this.username = username;
     String out = Identifiers.CONNECT_MESSAGE + " " + username.length() + " " + username;

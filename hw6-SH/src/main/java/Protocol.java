@@ -12,6 +12,7 @@ public class Protocol {
   private ConcurrentHashMap<String, ServerThread> clientMap;
   private BufferedReader reader;
   private PrintWriter out;
+  public static final int MAXIMUM_CONNECTIONS = 10;
 
   /**
    * Protocol class constructor.
@@ -60,6 +61,9 @@ public class Protocol {
       case 21:
         handleLogoff(tokens);
         break;
+      case 22:
+        handleQueryUsers(tokens);
+        break;
     }
     return response;
   }
@@ -71,7 +75,7 @@ public class Protocol {
       out = "Username has been used.";
     else {
       int size = this.clientMap.size();
-      if (size < 10) {
+      if (size < MAXIMUM_CONNECTIONS) {
         setUsername(username);
         out = "There are " + size + " other connected clients.";
       } else {
@@ -85,6 +89,10 @@ public class Protocol {
     String msg = "You are no longer connected";
     String out = Identifiers.CONNECT_RESPONSE + " " + msg.length() + " " + msg;
     this.out.println(out);
+  }
+
+  private void handleQueryUsers(String[] tokens){
+
   }
 
 }
