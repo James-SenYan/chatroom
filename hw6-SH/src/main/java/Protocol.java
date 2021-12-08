@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Protocol {
@@ -37,13 +40,23 @@ public class Protocol {
   }
 
   /**
-   * Sets this KKProtocol's username to input string.
+   * Sets this Protocol's username to input string.
    *
    * @param username a string representing username.
    */
   public void setUsername(String username) {
     this.username = username;
   }
+
+  /**
+   * Returns this Protocol's client map.
+   *
+   * @return username.
+   */
+  public ConcurrentHashMap<String, ServerThread> getClientMap() {
+    return clientMap;
+  }
+
 
   /**
    * Processes input identifier and write response based on the protocol.
@@ -58,7 +71,14 @@ public class Protocol {
         response = handleLogin(tokens);
         break;
       case 21:
-        handleLogoff(tokens);
+        response = handleLogoff(tokens);
+        break;
+      case 22:
+        List<String> users = handleQuery(tokens);
+        for (String user: users) {
+          response += user + ", ";
+        }
+        response = response.substring(0, response.length() - 2);
         break;
     }
     return response;
@@ -67,24 +87,49 @@ public class Protocol {
   private String handleLogin(String[] tokens) {
     String username = tokens[2];
     String out;
+    boolean isConnected = false;
     if (this.clientMap.containsKey(username))
       out = "Username has been used.";
     else {
       int size = this.clientMap.size();
       if (size < 10) {
         setUsername(username);
-        out = "There are " + size + " other connected clients.";
+        out = "Hello, " + username + ". There are " + size + " other connected clients.";
+        isConnected = true;
       } else {
         out = "Chat room is full. Retry later.";
       }
     }
-    return out;
+    String finalout = Identifiers.CONNECT_RESPONSE + " " + isConnected + " "
+        + out.length() + " " + out;
+    return finalout;
   }
 
-  private void handleLogoff(String[] tokens) {
-    String msg = "You are no longer connected";
-    String out = Identifiers.CONNECT_RESPONSE + " " + msg.length() + " " + msg;
-    this.out.println(out);
+  private String handleLogoff(String[] tokens) {
+    String username = tokens[2];
+    String out;
+    if (!this.clientMap.containsKey(username))
+      out = "User doesn't exist.";
+    else {
+      out = username + ", you are logged off";
+    }
+    String finalout = Identifiers.CONNECT_RESPONSE + " " + out.length() + " " + out;
+    return finalout;
+  }
+
+  private List<String> handleQuery(String[] tokens) {
+    List<String> responseList = new ArrayList<>();
+    String username = tokens[2];
+    if (!this.clientMap.containsKey(username))
+      responseList.add("Non-exist username.");
+    else {
+      for (String name : this.clientMap.keySet()) {
+        if (!name.equals(username))
+          responseList.add(name);
+      }
+    }
+
+    return responseList;
   }
 
 }

@@ -47,7 +47,6 @@ public class Server {
       ServerThread serverThread = new ServerThread(s, this);
       Thread thread = new Thread(serverThread);
 
-      System.out.println("before start server thread");
       thread.start();
     }
   }
