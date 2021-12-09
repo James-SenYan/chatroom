@@ -1,11 +1,8 @@
-import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 
@@ -17,8 +14,8 @@ public class Client {
   private String serverName;
   private int serverPort;
   private Socket socket;
-  private PrintWriter clientOut;
-  private BufferedReader clientIn;
+  private DataOutputStream clientOut;
+  private DataInputStream clientIn;
   private String username;
   private boolean logged;
   static Scanner scanner = new Scanner(System.in);
@@ -53,18 +50,48 @@ public class Client {
   private void handleResponseFromServer(Client client) throws IOException {
     while(true){
       handleCmdFromUser(client);
-      String fromServer = clientIn.readLine();
-      System.out.println("response:" + fromServer);
-      int identifier = Integer.parseInt(fromServer.split(" ")[0]);
-      if (identifier == Identifiers.DISCONNECT_MESSAGE){
-        System.out.println("About to log off...");
-        break;
+      int identifier = clientIn.readInt();
+      switch (identifier){
+        case Identifiers.CONNECT_RESPONSE:
+          boolean success = clientIn.readBoolean();
+          int msgSize = clientIn.readInt();
+          StringBuilder msgBody = new StringBuilder();
+          for (int i = 0; i < msgSize; i++) {
+            char c = clientIn.readChar();
+            msgBody.append(c);
+          }
+          System.out.println("Response from server: " + msgBody);
+          break;
+        case Identifiers.QUERY_USER_RESPONSE:
+          int activeUsers = clientIn.readInt();
+          if (activeUsers == 0){
+            System.out.println("You're the only active user in chat room");
+            break;
+          }
+          for (int i = 0; i < activeUsers; i++) {
+            int sizeOfName = clientIn.readInt();
+            StringBuilder name = new StringBuilder();
+            for (int j = 0; j < sizeOfName; j++) {
+              name.append(clientIn.readChar());
+            }
+            System.out.println("Active user: " + name);
+          }
+          break;
+        case Identifiers.FAILED_MESSAGE:
+          int failureMsgSize = clientIn.readInt();
+          StringBuilder failureMsg = new StringBuilder();
+          for (int i = 0; i < failureMsgSize; i++) {
+            failureMsg.append(clientIn.readChar());
+          }
+          System.out.println("Failure message from server: " + failureMsg);
+          break;
       }
     }
-    System.out.println("nothing from server...");
+    //System.out.println("About to close socket...Good Bye!");
+    //socket.close();
   }
 
-  private void handleCmdFromUser(Client client){
+  private void handleCmdFromUser(Client client) throws IOException {
     //read user command from terminal
     String cmd = "";
     System.out.println("Enter cmd: ");
@@ -98,16 +125,18 @@ public class Client {
     String recipient = tokens[1];
     String out = Identifiers.SEND_INSULT + " " + this.username.length() + " "
         + this.username + " " + recipient.length() + " " + recipient + " ";
-    this.clientOut.println(out);
+    //this.clientOut.println(out);
   }
 
   /**
    * Handle user query request(who)
    * @param tokens user input cmd
    */
-  private void handleQueryUsers(String[] tokens) {
+  private void handleQueryUsers(String[] tokens) throws IOException {
     String out = Identifiers.QUERY_CONNECTED_USERS + " " + this.username.length() + " " + this.username;
-    this.clientOut.println(out);
+    this.clientOut.writeInt(Identifiers.QUERY_CONNECTED_USERS);
+    this.clientOut.writeInt(username.length());
+    this.clientOut.writeChars(username);
   }
 
   /**
@@ -118,7 +147,7 @@ public class Client {
     String msgBody = tokens[1];
     String out = Identifiers.BROADCAST_MESSAGE + " "+ this.username.length() + " "
         + this.username + " " + msgBody.length() + " " + msgBody;
-    this.clientOut.println(out);
+    //this.clientOut.println(out);
   }
 
   /**
@@ -130,7 +159,7 @@ public class Client {
     String msgBody = tokens[2];
     String out = Identifiers.DIRECT_MESSAGE + " " + this.username.length() + " "
         + this.username + " " + recipient.length() + " " + recipient + " " + msgBody.length() + " " + msgBody;
-    this.clientOut.println(out);
+    //this.clientOut.println(out);
 
   }
 
@@ -138,21 +167,26 @@ public class Client {
    * Handle user logging off request
    * @param tokens user input cmd
    */
-  private void handleLogoff(String[] tokens) {
+  private void handleLogoff(String[] tokens) throws IOException {
     String out = Identifiers.DISCONNECT_MESSAGE + " " + username.length() + " " + username;
-    this.clientOut.println(out);
+    this.clientOut.writeInt(Identifiers.DISCONNECT_MESSAGE);
+    this.clientOut.writeInt(username.length());
+    this.clientOut.writeChars(username);
   }
 
   /**
    * Handle user logging in request
    * @param tokens user input cmd
    */
-  private void handleLogin(String[] tokens) {
+  private void handleLogin(String[] tokens) throws IOException {
     this.logged = true;
     String username = tokens[1];
     this.username = username;
     String out = Identifiers.CONNECT_MESSAGE + " " + username.length() + " " + username;
-    this.clientOut.println(out);
+    //this.clientOut.println(out);
+    this.clientOut.writeInt(Identifiers.CONNECT_MESSAGE);
+    this.clientOut.writeInt(username.length());
+    this.clientOut.writeChars(username);
   }
 
   /**
@@ -182,9 +216,9 @@ public class Client {
       //create a socket connect to the server
       socket = new Socket(InetAddress.getByName(serverName), serverPort);
       //client writes to the server
-      clientOut = new PrintWriter(socket.getOutputStream(), true);
+      clientOut = new DataOutputStream(socket.getOutputStream());
       //receive message from the server
-      clientIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+      clientIn = new DataInputStream(socket.getInputStream());
       return true;
     } catch (IOException e) {
       e.printStackTrace();

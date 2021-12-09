@@ -8,8 +8,8 @@ public class ServerThread extends Thread {
 
   private Socket s;
   private Server server;
-  private BufferedReader reader;
-  private PrintWriter out;
+  private DataInputStream serverIn;
+  private DataOutputStream serverOut;
   private Protocol protocol;
 
   /**
@@ -22,9 +22,9 @@ public class ServerThread extends Thread {
   public ServerThread(Socket s, Server server) throws IOException {
     this.s = s;
     this.server = server;
-    this.reader = new BufferedReader(new InputStreamReader(s.getInputStream()));
-    this.out = new PrintWriter(s.getOutputStream(), true);
-    this.protocol = new Protocol(server.getClientsMap(), reader, out);
+    this.serverIn = new DataInputStream(s.getInputStream());
+    this.serverOut = new DataOutputStream(s.getOutputStream());
+    this.protocol = new Protocol(server.getClientsMap(), serverIn, serverOut);
   }
 
 
@@ -36,20 +36,15 @@ public class ServerThread extends Thread {
       e.printStackTrace();
     }
   }
-
-  private void handleRequest() throws IOException {
-    String input = "";
-    while ((input = reader.readLine()) != null){
-      System.out.println(input);
-      String[] tokens = input.split(" ");
-      int identifier = Integer.parseInt(tokens[0]);
-      if (protocol.getUsername() == null) {
-        out.println(protocol.processInput(identifier, tokens));
+  private void handleRequest() throws IOException{
+    while (s.isConnected()){
+      int identifiers = this.serverIn.readInt();
+      if (protocol.getUsername() == null){
+        protocol.processInput(identifiers);
         this.server.getClientsMap().put(protocol.getUsername(), this);
-      } else {
-        out.println(protocol.processInput(identifier, tokens));
+      }else{
+        protocol.processInput(identifiers);
       }
-
       System.out.println("The protocol username is : " + protocol.getUsername());
       System.out.println("The clientmap size is : " + this.server.getClientsMap().size());
     }

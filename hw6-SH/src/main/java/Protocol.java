@@ -10,25 +10,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.swing.SizeSequence;
 
 public class Protocol {
   private String username;
   private ConcurrentHashMap<String, ServerThread> clientMap;
-  private BufferedReader reader;
-  private PrintWriter out;
+  private DataInputStream is;
+  private DataOutputStream os;
   public static final int MAXIMUM_CONNECTIONS = 10;
 
   /**
    * Protocol class constructor.
    *
    * @param clientMap a ConcurrentHashMap contains all info on connected clients.
-   * @param reader       server input stream.
-   * @param out       server output stream.
+   * @param is       server input stream.
+   * @param os       server output stream.
    */
-  public Protocol(ConcurrentHashMap<String, ServerThread> clientMap, BufferedReader reader, PrintWriter out) {
+  public Protocol(ConcurrentHashMap<String, ServerThread> clientMap, DataInputStream is, DataOutputStream os) {
     this.clientMap = clientMap;
-    this.reader = reader;
-    this.out = out;
+    this.is = is;
+    this.os = os;
     this.username = null;
   }
 
@@ -76,33 +77,38 @@ public class Protocol {
    * @param identifier an integer representing message type based on given chat room protocol.
    * @throws IOException handles all messages that in incorrect format.
    */
-  public String processInput(int identifier, String[] tokens) throws IOException {
-    String response = "";
+  public void processInput(int identifier) throws IOException {
     switch (identifier){
       case Identifiers.CONNECT_MESSAGE:
-        response = handleLogin(tokens);
-        System.out.println("THIS GOT CALLED FOR LOGIN");
+        handleLogin();
         break;
       case Identifiers.DISCONNECT_MESSAGE:
-        response = handleLogoff(tokens);
+        handleLogoff();
         break;
       case Identifiers.QUERY_CONNECTED_USERS:
-       response = handleQueryUsers(tokens);
+        handleQueryUsers();
+        break;
+      case Identifiers.DIRECT_MESSAGE:
+        //handleDirectMsg(is);
         break;
     }
-    return response;
   }
 
-  private String handleLogin(String[] tokens) {
-    String username = tokens[2];
+  private void handleLogin() throws IOException {
+    int sizeOfUser = is.readInt();
+    StringBuilder username = new StringBuilder();
+    for (int i = 0; i < sizeOfUser; i++) {
+      char c = is.readChar();
+      username.append(c);
+    }
     String out;
     boolean isConnected = false;
-    if (this.clientMap.containsKey(username))
+    if (this.clientMap.containsKey(username.toString()))
       out = "Username has been used.";
     else {
       int size = this.clientMap.size();
       if (size < MAXIMUM_CONNECTIONS) {
-        setUsername(username);
+        setUsername(username.toString());
         out = "Hello, " + username + ". There are " + size + " other connected clients.";
         isConnected = true;
       } else {
@@ -111,21 +117,30 @@ public class Protocol {
     }
     String finalout = Identifiers.CONNECT_RESPONSE + " " + isConnected + " "
         + out.length() + " " + out;
-    return finalout;
+    os.writeInt(Identifiers.CONNECT_RESPONSE);
+    os.writeBoolean(isConnected);
+    os.writeInt(out.length());
+    os.writeChars(out);
   }
 
-  private String handleLogoff(String[] tokens) {
-    String username = tokens[2];
+  private void handleLogoff() throws IOException {
+    int sizeOfUsername = is.readInt();
+    StringBuilder username = new StringBuilder();
+    for (int i = 0; i < sizeOfUsername; i++) {
+      username.append(is.readChar());
+    }
     String out;
-    if (!this.clientMap.containsKey(username))
+    if (!this.clientMap.containsKey(username.toString()))
       out = "User doesn't exist.";
     else {
-      this.setClientMap(username);
+      this.setClientMap(username.toString());
       this.setUsername(null);
       out = "You are no longer connected";
     }
     String finalout = Identifiers.CONNECT_RESPONSE + " " + out.length() + " " + out;
-    return finalout;
+    os.writeInt(Identifiers.CONNECT_RESPONSE);
+    os.writeInt(out.length());
+    os.writeChars(out);
   }
 
 //  private List<String> handleQuery(String[] tokens) {
@@ -142,14 +157,36 @@ public class Protocol {
 //    return responseList;
 //  }
 
-  private String handleQueryUsers(String[] tokens){
-    String userRequesting = tokens[2];
-    Set<String> activeUsers = this.clientMap.keySet();
-    StringBuilder out = new StringBuilder(
-        Identifiers.QUERY_USER_RESPONSE + " " + activeUsers.size());
-    for (String user : activeUsers){
-      out.append(" " + user.length() + " " +user);
+  private void handleQueryUsers() throws IOException {
+    int sizeOfName = is.readInt();
+    //person who is requesting
+    StringBuilder queryName = new StringBuilder();
+    for (int i = 0; i < sizeOfName; i++) {
+      queryName.append(is.readChar());
     }
-    return out.toString();
+    if (!this.clientMap.containsKey(queryName)){
+      os.writeInt(Identifiers.FAILED_MESSAGE);
+      String out = "Non-exist username";
+      os.writeInt(out.length());
+      os.writeChars(out);
+    }else{
+      Set<String> activeUsers = this.clientMap.keySet();
+      os.writeInt(Identifiers.QUERY_USER_RESPONSE);
+      os.writeInt(activeUsers.size() - 1);//deduct the person who is requesting himself
+      for (String user : activeUsers){
+        os.writeInt(user.length());
+        os.writeChars(user);
+      }
+    }
+  }
+
+  private String handleDirectMsg(String[] tokens){
+    String sizeOfSender = tokens[1];
+    String senderName = tokens[2];
+    String sizeOfRecipient = tokens[3];
+    String recipientName = tokens[4];
+    String lengthOfMsg = tokens[5];
+    return "final out";
+
   }
 }
