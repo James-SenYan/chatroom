@@ -55,21 +55,13 @@ public class Client {
         case Identifiers.CONNECT_RESPONSE:
           boolean success = clientIn.readBoolean();
           int msgSize = clientIn.readInt();
-          StringBuilder msgBody = new StringBuilder();
-          for (int i = 0; i < msgSize; i++) {
-            char c = clientIn.readChar();
-            msgBody.append(c);
-          }
+          String msgBody = StringByteArrayTransfer.byteArrayToString(clientIn, msgSize);
           System.out.println("Response from server: " + msgBody);
           break;
         case Identifiers.DISCONNECT_RESPONSE:
           success = clientIn.readBoolean();
           msgSize = clientIn.readInt();
-          msgBody = new StringBuilder();
-          for (int i = 0; i < msgSize; i++) {
-            char c = clientIn.readChar();
-            msgBody.append(c);
-          }
+          msgBody = StringByteArrayTransfer.byteArrayToString(clientIn, msgSize);
           System.out.println("Response from server: " + msgBody);
           break;
         case Identifiers.QUERY_USER_RESPONSE:
@@ -80,20 +72,19 @@ public class Client {
           }
           for (int i = 0; i < activeUsers; i++) {
             int sizeOfName = clientIn.readInt();
-            StringBuilder name = new StringBuilder();
-            for (int j = 0; j < sizeOfName; j++) {
-              name.append(clientIn.readChar());
-            }
+            String name = StringByteArrayTransfer.byteArrayToString(clientIn, sizeOfName);
             System.out.println("Active user: " + name);
           }
           break;
+        case Identifiers.DIRECT_MESSAGE:
+            int sizeOfMsg = clientIn.readInt();
+            String receive = StringByteArrayTransfer.byteArrayToString(clientIn, sizeOfMsg);
+            System.out.println(receive);
+            break;
         case Identifiers.FAILED_MESSAGE:
           int failureMsgSize = clientIn.readInt();
-          StringBuilder failureMsg = new StringBuilder();
-          for (int i = 0; i < failureMsgSize; i++) {
-            failureMsg.append(clientIn.readChar());
-          }
-          System.out.println("Failure message from server: " + failureMsg);
+          String failureMsg = StringByteArrayTransfer.byteArrayToString(clientIn, failureMsgSize);
+          System.out.println("Failure message: " + failureMsg);
           break;
       }
     }
@@ -153,23 +144,33 @@ public class Client {
    * Handle sending a broadcast msg request
    * @param tokens user input cmd
    */
-  private void handleBroadcastMsg(String[] tokens) {
+  private void handleBroadcastMsg(String[] tokens) throws IOException {
     String msgBody = tokens[1];
     String out = Identifiers.BROADCAST_MESSAGE + " "+ this.username.length() + " "
         + this.username + " " + msgBody.length() + " " + msgBody;
-    //this.clientOut.println(out);
+    this.clientOut.writeInt(Identifiers.BROADCAST_MESSAGE);
+    this.clientOut.writeInt(this.username.length());
+    this.clientOut.writeChars(this.username);
+    this.clientOut.writeInt(msgBody.length());
+    this.clientOut.writeChars(msgBody);
   }
 
   /**
    * Handle sending a msg directly to specific user
    * @param tokens user input cmd
    */
-  private void handleDirectMsg(String[] tokens) {
+  private void handleDirectMsg(String[] tokens) throws IOException {
     String recipient = tokens[1];
     String msgBody = tokens[2];
     String out = Identifiers.DIRECT_MESSAGE + " " + this.username.length() + " "
         + this.username + " " + recipient.length() + " " + recipient + " " + msgBody.length() + " " + msgBody;
-    //this.clientOut.println(out);
+    this.clientOut.writeInt(Identifiers.DIRECT_MESSAGE);
+    this.clientOut.writeInt(this.username.length());
+    this.clientOut.writeChars(this.username);
+    this.clientOut.writeInt(recipient.length());
+    this.clientOut.writeChars(recipient);
+    this.clientOut.writeInt(msgBody.length());
+    this.clientOut.writeChars(msgBody);
 
   }
 
@@ -191,7 +192,6 @@ public class Client {
     this.logged = true;
     String username = tokens[1];
     this.username = username;
-    //this.clientOut.println(out);
     this.clientOut.writeInt(Identifiers.CONNECT_MESSAGE);
     this.clientOut.writeInt(username.length());
     this.clientOut.writeChars(username);

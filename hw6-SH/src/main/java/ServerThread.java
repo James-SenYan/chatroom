@@ -27,6 +27,9 @@ public class ServerThread extends Thread {
     this.protocol = new Protocol(server.getClientsMap(), serverIn, serverOut);
   }
 
+  public Protocol getProtocol() {
+    return protocol;
+  }
 
   @Override
   public void run(){
