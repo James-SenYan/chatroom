@@ -90,18 +90,14 @@ public class Protocol {
         handleQueryUsers();
         break;
       case Identifiers.DIRECT_MESSAGE:
-        //handleDirectMsg(is);
+        handleDirectMsg();
         break;
     }
   }
 
   private void handleLogin() throws IOException {
     int sizeOfUser = is.readInt();
-    StringBuilder username = new StringBuilder();
-    for (int i = 0; i < sizeOfUser; i++) {
-      char c = is.readChar();
-      username.append(c);
-    }
+    String username = StringByteArrayTransfer.byteArrayToString(is, sizeOfUser);
     String out;
     boolean isConnected = false;
     if (this.clientMap.containsKey(username.toString()))
@@ -124,10 +120,7 @@ public class Protocol {
 
   private void handleLogoff() throws IOException {
     int sizeOfUsername = is.readInt();
-    StringBuilder username = new StringBuilder();
-    for (int i = 0; i < sizeOfUsername; i++) {
-      username.append(is.readChar());
-    }
+    String username = StringByteArrayTransfer.byteArrayToString(is, sizeOfUsername);
     String out;
     boolean isDisconnected = false;
     if (!this.clientMap.containsKey(username.toString()))
@@ -143,20 +136,6 @@ public class Protocol {
     os.writeInt(out.length());
     os.writeChars(out);
   }
-
-//  private List<String> handleQuery(String[] tokens) {
-//    List<String> responseList = new ArrayList<>();
-//    String username = tokens[2];
-//    if (!this.clientMap.containsKey(username))
-//      responseList.add("Non-exist username.");
-//    else {
-//      for (String name : this.clientMap.keySet()) {
-//        if (!name.equals(username))
-//          responseList.add(name);
-//      }
-//    }
-//    return responseList;
-//  }
 
   private void handleQueryUsers() throws IOException {
     int sizeOfName = is.readInt();
@@ -188,12 +167,33 @@ public class Protocol {
     }
   }
 
-  private String handleDirectMsg(String[] tokens){
-    String sizeOfSender = tokens[1];
-    String senderName = tokens[2];
-    String sizeOfRecipient = tokens[3];
-    String recipientName = tokens[4];
-    String lengthOfMsg = tokens[5];
-    return "final out";
+
+  private void handleDirectMsg() throws IOException {
+    int sizeOfSender = is.readInt();
+    String senderName = StringByteArrayTransfer.byteArrayToString(is, sizeOfSender);
+    int sizeOfRecipient = is.readInt();
+    String recipientName = StringByteArrayTransfer.byteArrayToString(is, sizeOfRecipient);
+    int lengthOfMsg = is.readInt();
+    String msgBody = StringByteArrayTransfer.byteArrayToString(is, lengthOfMsg);
+    if (!this.clientMap.containsKey(senderName) || !this.clientMap.containsKey(recipientName)){
+      os.writeInt(Identifiers.FAILED_MESSAGE);
+      String out = "Fail to send message, plz check you've logged in and using valid recipient name";
+      os.writeInt(out.length());
+      os.writeChars(out);
+    }else{
+      ServerThread serverThread = this.clientMap.get(recipientName);
+      serverThread.getProtocol().sentMsg(senderName, msgBody);
+      os.writeInt(Identifiers.DIRECT_MESSAGE);
+      String out = "message sent successful";
+      os.writeInt(out.length());
+      os.writeChars(out);
+    }
+  }
+
+  private void sentMsg(String sender, String msgBody) throws IOException {
+    os.writeInt(Identifiers.DIRECT_MESSAGE);
+    String out = "You got a message from " + sender + " : " + msgBody;
+    os.writeInt(out.length());
+    os.writeChars(out);
   }
 }
