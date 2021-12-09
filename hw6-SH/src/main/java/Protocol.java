@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -164,7 +165,14 @@ public class Protocol {
     for (int i = 0; i < sizeOfName; i++) {
       queryName.append(is.readChar());
     }
-    if (!this.clientMap.containsKey(queryName)){
+    boolean found = false;
+    for (String s: this.clientMap.keySet()) {
+      if (s.equals(queryName.toString())) {
+        found = true;
+        break;
+      }
+    }
+    if (!found){
       os.writeInt(Identifiers.FAILED_MESSAGE);
       String out = "Non-exist username";
       os.writeInt(out.length());
@@ -187,6 +195,5 @@ public class Protocol {
     String recipientName = tokens[4];
     String lengthOfMsg = tokens[5];
     return "final out";
-
   }
 }

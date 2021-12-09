@@ -121,7 +121,7 @@ public class Client {
     }else if(cmd.contains("@all")){
       client.handleBroadcastMsg(tokens);
     }else if (cmd.contains("who")){
-      client.handleQueryUsers(tokens);
+      client.handleQueryUsers();
     }else if (cmd.contains("!user")){
       client.handleInsultMsg(tokens);
     }
@@ -140,10 +140,8 @@ public class Client {
 
   /**
    * Handle user query request(who)
-   * @param tokens user input cmd
    */
-  private void handleQueryUsers(String[] tokens) throws IOException {
-    String out = Identifiers.QUERY_CONNECTED_USERS + " " + this.username.length() + " " + this.username;
+  private void handleQueryUsers() throws IOException {
     this.clientOut.writeInt(Identifiers.QUERY_CONNECTED_USERS);
     this.clientOut.writeInt(username.length());
     this.clientOut.writeChars(username);
