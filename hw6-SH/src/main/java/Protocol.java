@@ -115,8 +115,6 @@ public class Protocol {
         out = "Chat room is full. Retry later.";
       }
     }
-    String finalout = Identifiers.CONNECT_RESPONSE + " " + isConnected + " "
-        + out.length() + " " + out;
     os.writeInt(Identifiers.CONNECT_RESPONSE);
     os.writeBoolean(isConnected);
     os.writeInt(out.length());
@@ -130,15 +128,17 @@ public class Protocol {
       username.append(is.readChar());
     }
     String out;
+    boolean isDisconnected = false;
     if (!this.clientMap.containsKey(username.toString()))
       out = "User doesn't exist.";
     else {
       this.setClientMap(username.toString());
       this.setUsername(null);
       out = "You are no longer connected";
+      isDisconnected = true;
     }
-    String finalout = Identifiers.CONNECT_RESPONSE + " " + out.length() + " " + out;
-    os.writeInt(Identifiers.CONNECT_RESPONSE);
+    os.writeInt(Identifiers.DISCONNECT_RESPONSE);
+    os.writeBoolean(isDisconnected);
     os.writeInt(out.length());
     os.writeChars(out);
   }

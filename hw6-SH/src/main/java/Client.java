@@ -62,6 +62,16 @@ public class Client {
           }
           System.out.println("Response from server: " + msgBody);
           break;
+        case Identifiers.DISCONNECT_RESPONSE:
+          success = clientIn.readBoolean();
+          msgSize = clientIn.readInt();
+          msgBody = new StringBuilder();
+          for (int i = 0; i < msgSize; i++) {
+            char c = clientIn.readChar();
+            msgBody.append(c);
+          }
+          System.out.println("Response from server: " + msgBody);
+          break;
         case Identifiers.QUERY_USER_RESPONSE:
           int activeUsers = clientIn.readInt();
           if (activeUsers == 0){
@@ -168,7 +178,6 @@ public class Client {
    * @param tokens user input cmd
    */
   private void handleLogoff(String[] tokens) throws IOException {
-    String out = Identifiers.DISCONNECT_MESSAGE + " " + username.length() + " " + username;
     this.clientOut.writeInt(Identifiers.DISCONNECT_MESSAGE);
     this.clientOut.writeInt(username.length());
     this.clientOut.writeChars(username);
@@ -182,7 +191,6 @@ public class Client {
     this.logged = true;
     String username = tokens[1];
     this.username = username;
-    String out = Identifiers.CONNECT_MESSAGE + " " + username.length() + " " + username;
     //this.clientOut.println(out);
     this.clientOut.writeInt(Identifiers.CONNECT_MESSAGE);
     this.clientOut.writeInt(username.length());
