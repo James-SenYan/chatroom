@@ -127,39 +127,48 @@ public class Client {
       //String[] tokens = cmd.split(" ");
       if (cmd.equals("?")){
         printMenu();
-      }else if (cmd.contains("login") && !client.logged ){//one client can only log once
+      }else if (cmd.contains("login")){//one client can only log once
         //handle login process
-        String[] tokens = cmd.split(" ", 2);
-        client.handleLogin(tokens);
-      }else if (cmd.contains("logoff") || cmd.contains("quit")){
+        if (!this.logged){
+          String[] tokens = cmd.split(" ", 2);
+          client.handleLogin(tokens);
+        }else{
+          System.out.println("You must log in before moving forward!!");
+        }
+      }else if ((cmd.contains("logoff") || cmd.contains("quit")) && this.logged){
         //handle logoff process
         String[] tokens = cmd.split(" ");
         client.handleLogoff(tokens);
-      }else if(cmd.contains("@user")){
+      }else if(cmd.contains("@user") && this.logged){
         String[] tokens = cmd.split(" ", 3);
         client.handleDirectMsg(tokens);
-      }else if(cmd.contains("@all")){
+      }else if(cmd.contains("@all") && this.logged){
         String[] tokens = cmd.split(" ", 2);
         client.handleBroadcastMsg(tokens);
-      }else if (cmd.contains("who")){
+      }else if (cmd.contains("who") && this.logged){
         client.handleQueryUsers();
-      }else if (cmd.contains("!user")){
-        String[] tokens = cmd.split(" ", 3);
+      }else if (cmd.contains("!user") && this.logged){
+        String[] tokens = cmd.split(" ", 2);
         client.handleInsultMsg(tokens);
+      }else{
+        System.out.println("You must log in before moving forward!!");
       }
     }
-
   }
 
   /**
    * Send a random insult to recipient
    * @param tokens user input cmd
    */
-  private void handleInsultMsg(String[] tokens) {
+  private void handleInsultMsg(String[] tokens) throws IOException {
     String recipient = tokens[1];
     String out = Identifiers.SEND_INSULT + " " + this.username.length() + " "
         + this.username + " " + recipient.length() + " " + recipient + " ";
-    //this.clientOut.println(out);
+    this.clientOut.writeInt(Identifiers.SEND_INSULT);
+    this.clientOut.writeInt(this.username.length());
+    this.clientOut.writeChars(this.username);
+    this.clientOut.writeInt(recipient.length());
+    this.clientOut.writeChars(recipient);
   }
 
   /**

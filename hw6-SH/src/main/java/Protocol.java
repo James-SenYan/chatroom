@@ -92,10 +92,15 @@ public class Protocol {
       case Identifiers.DIRECT_MESSAGE:
         handleDirectMsg();
         break;
-        case Identifiers.BROADCAST_MESSAGE:
+      case Identifiers.BROADCAST_MESSAGE:
           handleBroadcastMsg();
+          break;
+      case Identifiers.SEND_INSULT:
+          handleInsultMsg();
+          break;
     }
   }
+
 
 
 
@@ -218,6 +223,29 @@ public class Protocol {
         }
         serverThread.getProtocol().sentMsg(senderName, msgBody);
       }
+      os.writeInt(Identifiers.DIRECT_MESSAGE);
+      String out = "message sent successful";
+      os.writeInt(out.length());
+      os.writeChars(out);
+    }
+  }
+
+
+  private void handleInsultMsg() throws IOException {
+    int sizeOfSender = is.readInt();
+    String senderName = StringByteArrayTransfer.byteArrayToString(is, sizeOfSender);
+    int sizeOfRecipient = is.readInt();
+    String recipientName = StringByteArrayTransfer.byteArrayToString(is, sizeOfRecipient);
+    //String insultBody = InsultGenerator.generateInsult();
+    String insultBody = "You're trash";
+    if (!this.clientMap.containsKey(senderName) || !this.clientMap.containsKey(recipientName)){
+      os.writeInt(Identifiers.FAILED_MESSAGE);
+      String out = "Fail to send message, plz check you've logged in and using valid recipient name";
+      os.writeInt(out.length());
+      os.writeChars(out);
+    }else{
+      ServerThread serverThread = this.clientMap.get(recipientName);
+      serverThread.getProtocol().sentMsg(senderName, insultBody);
       os.writeInt(Identifiers.DIRECT_MESSAGE);
       String out = "message sent successful";
       os.writeInt(out.length());
