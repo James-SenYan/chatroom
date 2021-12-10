@@ -1,17 +1,10 @@
-import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.net.Socket;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.swing.SizeSequence;
+
 
 public class Protocol {
   private String username;
@@ -19,6 +12,7 @@ public class Protocol {
   private DataInputStream is;
   private DataOutputStream os;
   public static final int MAXIMUM_CONNECTIONS = 10;
+  static final String dir = System.getProperty("user.dir");
 
   /**
    * Protocol class constructor.
@@ -236,8 +230,13 @@ public class Protocol {
     String senderName = StringByteArrayTransfer.byteArrayToString(is, sizeOfSender);
     int sizeOfRecipient = is.readInt();
     String recipientName = StringByteArrayTransfer.byteArrayToString(is, sizeOfRecipient);
-    //String insultBody = InsultGenerator.generateInsult();
-    String insultBody = "You're trash";
+    String path = dir + "/src/main/resources/insult_grammar.json";
+    System.out.println(dir);
+    Grammar grammar = new Grammar(path);
+    Random random = new Random();
+    RandomSentenceGenerator generator = new RandomSentenceGenerator(grammar);
+    String insultBody = generator.generateASentence(random);
+    //String insultBody = "You're trash";
     if (!this.clientMap.containsKey(senderName) || !this.clientMap.containsKey(recipientName)){
       os.writeInt(Identifiers.FAILED_MESSAGE);
       String out = "Fail to send message, plz check you've logged in and using valid recipient name";

@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="InsultGenerator">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/InsultGenerator.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
