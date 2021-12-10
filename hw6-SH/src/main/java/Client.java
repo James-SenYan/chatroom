@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Scanner;
-import org.apache.commons.lang3.StringUtils;
 
 
 /**

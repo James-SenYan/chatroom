@@ -92,8 +92,12 @@ public class Protocol {
       case Identifiers.DIRECT_MESSAGE:
         handleDirectMsg();
         break;
+        case Identifiers.BROADCAST_MESSAGE:
+          handleBroadcastMsg();
     }
   }
+
+
 
   private void handleLogin() throws IOException {
     int sizeOfUser = is.readInt();
@@ -196,4 +200,31 @@ public class Protocol {
     os.writeInt(out.length());
     os.writeChars(out);
   }
+
+  private void handleBroadcastMsg() throws IOException {
+    int sizeOfSenderName = is.readInt();
+    String senderName = StringByteArrayTransfer.byteArrayToString(is, sizeOfSenderName);
+    int sizeOfMsg = is.readInt();
+    String msgBody = StringByteArrayTransfer.byteArrayToString(is, sizeOfMsg);
+    if (!this.clientMap.containsKey(senderName)) {
+      os.writeInt(Identifiers.FAILED_MESSAGE);
+      String out = "Fail to send message, plz check you've logged in and using valid recipient name";
+      os.writeInt(out.length());
+      os.writeChars(out);
+    } else {
+      for (ServerThread serverThread : this.clientMap.values()) {
+        if (serverThread.getProtocol().getUsername().equals(senderName)) {
+          continue;
+        }
+        serverThread.getProtocol().sentMsg(senderName, msgBody);
+      }
+      os.writeInt(Identifiers.DIRECT_MESSAGE);
+      String out = "message sent successful";
+      os.writeInt(out.length());
+      os.writeChars(out);
+    }
+  }
+
+
+
 }
