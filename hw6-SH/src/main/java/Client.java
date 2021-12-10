@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Scanner;
+import org.apache.commons.lang3.StringUtils;
 
 
 /**
@@ -124,22 +125,27 @@ public class Client {
       System.out.println("Enter cmd: ");
       System.out.println("You can enter ? to see instruction of using chat room");
       cmd = scanner.nextLine();
-      String[] tokens = cmd.split(" ");
+      //String[] tokens = cmd.split(" ");
       if (cmd.equals("?")){
         printMenu();
       }else if (cmd.contains("login") && !client.logged ){//one client can only log once
         //handle login process
+        String[] tokens = cmd.split(" ", 2);
         client.handleLogin(tokens);
       }else if (cmd.contains("logoff") || cmd.contains("quit")){
         //handle logoff process
+        String[] tokens = cmd.split(" ");
         client.handleLogoff(tokens);
       }else if(cmd.contains("@user")){
+        String[] tokens = cmd.split(" ", 3);
         client.handleDirectMsg(tokens);
       }else if(cmd.contains("@all")){
+        String[] tokens = cmd.split(" ", 2);
         client.handleBroadcastMsg(tokens);
       }else if (cmd.contains("who")){
         client.handleQueryUsers();
       }else if (cmd.contains("!user")){
+        String[] tokens = cmd.split(" ", 3);
         client.handleInsultMsg(tokens);
       }
     }
