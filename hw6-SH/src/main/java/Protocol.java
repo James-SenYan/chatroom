@@ -140,10 +140,7 @@ public class Protocol {
   private void handleQueryUsers() throws IOException {
     int sizeOfName = is.readInt();
     //person who is requesting
-    StringBuilder queryName = new StringBuilder();
-    for (int i = 0; i < sizeOfName; i++) {
-      queryName.append(is.readChar());
-    }
+    String queryName = StringByteArrayTransfer.byteArrayToString(is, sizeOfName);
     boolean found = false;
     for (String s: this.clientMap.keySet()) {
       if (s.equals(queryName.toString())) {
@@ -161,6 +158,9 @@ public class Protocol {
       os.writeInt(Identifiers.QUERY_USER_RESPONSE);
       os.writeInt(activeUsers.size() - 1);//deduct the person who is requesting himself
       for (String user : activeUsers){
+        if (user.equals(queryName)){
+          continue;
+        }
         os.writeInt(user.length());
         os.writeChars(user);
       }

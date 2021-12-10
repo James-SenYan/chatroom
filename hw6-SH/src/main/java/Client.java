@@ -40,16 +40,41 @@ public class Client {
       connected = client.connect();
     }while (!connected);
     System.out.println("connect successful");
-    try {
-      client.handleResponseFromServer(client);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    client.startUIThread(client);
+    client.startHandleThread();
   }
 
-  private void handleResponseFromServer(Client client) throws IOException {
+  private void startUIThread(Client client) {
+    Thread thread = new Thread(){
+      @Override
+      public void run(){
+        try {
+          handleCmdFromUser(client);
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
+    };
+    thread.start();
+  }
+
+
+  private void startHandleThread(){
+    Thread thread = new Thread(){
+      @Override
+      public void run(){
+        try {
+          handleResponseFromServer();
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
+    };
+    thread.start();
+  }
+
+  private void handleResponseFromServer() throws IOException {
     while(true){
-      handleCmdFromUser(client);
       int identifier = clientIn.readInt();
       switch (identifier){
         case Identifiers.CONNECT_RESPONSE:
@@ -94,28 +119,31 @@ public class Client {
 
   private void handleCmdFromUser(Client client) throws IOException {
     //read user command from terminal
-    String cmd = "";
-    System.out.println("Enter cmd: ");
-    System.out.println("You can enter ? to see instruction of using chat room");
-    cmd = scanner.nextLine();
-    String[] tokens = cmd.split(" ");
-    if (cmd.equals("?")){
-      printMenu();
-    }else if (cmd.contains("login") && !client.logged ){//one client can only log once
-      //handle login process
-      client.handleLogin(tokens);
-    }else if (cmd.contains("logoff") || cmd.contains("quit")){
-      //handle logoff process
-      client.handleLogoff(tokens);
-    }else if(cmd.contains("@user")){
-      client.handleDirectMsg(tokens);
-    }else if(cmd.contains("@all")){
-      client.handleBroadcastMsg(tokens);
-    }else if (cmd.contains("who")){
-      client.handleQueryUsers();
-    }else if (cmd.contains("!user")){
-      client.handleInsultMsg(tokens);
+    while (true){
+      String cmd = "";
+      System.out.println("Enter cmd: ");
+      System.out.println("You can enter ? to see instruction of using chat room");
+      cmd = scanner.nextLine();
+      String[] tokens = cmd.split(" ");
+      if (cmd.equals("?")){
+        printMenu();
+      }else if (cmd.contains("login") && !client.logged ){//one client can only log once
+        //handle login process
+        client.handleLogin(tokens);
+      }else if (cmd.contains("logoff") || cmd.contains("quit")){
+        //handle logoff process
+        client.handleLogoff(tokens);
+      }else if(cmd.contains("@user")){
+        client.handleDirectMsg(tokens);
+      }else if(cmd.contains("@all")){
+        client.handleBroadcastMsg(tokens);
+      }else if (cmd.contains("who")){
+        client.handleQueryUsers();
+      }else if (cmd.contains("!user")){
+        client.handleInsultMsg(tokens);
+      }
     }
+
   }
 
   /**
@@ -159,7 +187,7 @@ public class Client {
    */
   private void handleDirectMsg(String[] tokens) throws IOException {
     String recipient = tokens[1];
-    String msgBody = tokens[2];
+    String msgBody = tokens[2];//这里有问题，应该是tokens【1】之后的所有信息都要传给msgBody
     String out = Identifiers.DIRECT_MESSAGE + " " + this.username.length() + " "
         + this.username + " " + recipient.length() + " " + recipient + " " + msgBody.length() + " " + msgBody;
     this.clientOut.writeInt(Identifiers.DIRECT_MESSAGE);
