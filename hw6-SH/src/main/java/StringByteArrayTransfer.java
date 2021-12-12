@@ -2,7 +2,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 
 /**
- * Utility class which is used to address string<=>byte[] transferring problems
+ * Utility class which is used to address string-byte[] transferring problems
  */
 public class StringByteArrayTransfer {
 
