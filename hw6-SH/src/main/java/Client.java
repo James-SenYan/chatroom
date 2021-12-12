@@ -11,43 +11,76 @@ import java.util.Scanner;
  */
 public class Client {
 
+  static Scanner scanner = new Scanner(System.in);
   private String serverName;
   private int serverPort;
   private Socket socket;
   private DataOutputStream clientOut;
   private DataInputStream clientIn;
+  //username who logged in
   private String username;
+  //client logging status
   private boolean logged;
-  static Scanner scanner = new Scanner(System.in);
 
-
+  /**
+   * Client constructor
+   * @param serverName server name
+   * @param serverPort server port number
+   */
   public Client(String serverName, int serverPort) {
     this.logged = false;
     this.serverName = serverName;
     this.serverPort = serverPort;
   }
 
+  /**
+   * Entrance of the client.
+   * @param args users input from terminal
+   */
   public static void main(String[] args) {
     boolean connected = false;
     Client client = null;
     do {
       //ask users to enter serverName and portNumber
       checkInMenu();
-      String server= scanner.nextLine();
+      String server = scanner.nextLine();
       int port = Integer.parseInt(scanner.nextLine());
       client = new Client(server, port);
-      //goes to main menu(user interface)
       connected = client.connect();
-    }while (!connected);
+    } while (!connected);
     System.out.println("connect successful");
     client.startUIThread(client);
     client.startHandleThread();
   }
 
+  /**
+   * Print out this menu to ask users to input server name and port number
+   */
+  private static void checkInMenu() {
+    System.out.println("Enter server name and port number: ");
+  }
+
+  /**
+   * print out this instruction menu when user types in ?
+   */
+  private static void printMenu() {
+    System.out.println("logoff: sends a DISCONNECT_MESSAGE to the server");
+    System.out.println("who: sends a QUERY_CONNECTED_USERS to the server");
+    System.out.println("@user: sends a DIRECT_MESSAGE to the specified user to the server");
+    System.out.println(
+        "@all: sends a BROADCAST_MESSAGE to the server, to be sent to all users connected");
+    System.out.println(
+        "!user: sends a SEND_INSULT message to the server, to be sent to the specified user");
+  }
+
+  /**
+   * UI thread is used to listening to command from terminal
+   * @param client the client
+   */
   private void startUIThread(Client client) {
-    Thread thread = new Thread(){
+    Thread thread = new Thread() {
       @Override
-      public void run(){
+      public void run() {
         try {
           handleCmdFromUser(client);
         } catch (IOException e) {
@@ -58,11 +91,13 @@ public class Client {
     thread.start();
   }
 
-
-  private void startHandleThread(){
-    Thread thread = new Thread(){
+  /**
+   * Start a thread to handle response from server.
+   */
+  private void startHandleThread() {
+    Thread thread = new Thread() {
       @Override
-      public void run(){
+      public void run() {
         try {
           handleResponseFromServer();
         } catch (IOException e) {
@@ -73,10 +108,14 @@ public class Client {
     thread.start();
   }
 
+  /**
+   * Handle response from server based on protocol
+   * @throws IOException throw an IO exception
+   */
   private void handleResponseFromServer() throws IOException {
-    while(true){
+    while (true) {
       int identifier = clientIn.readInt();
-      switch (identifier){
+      switch (identifier) {
         case Identifiers.CONNECT_RESPONSE:
           boolean success = clientIn.readBoolean();
           int msgSize = clientIn.readInt();
@@ -87,11 +126,14 @@ public class Client {
           success = clientIn.readBoolean();
           msgSize = clientIn.readInt();
           msgBody = StringByteArrayTransfer.byteArrayToString(clientIn, msgSize);
-          System.out.println("Response from server: " + msgBody);
+          if (success){
+            System.out.println("Response from server: " + msgBody);
+            this.logged = false;
+          }
           break;
         case Identifiers.QUERY_USER_RESPONSE:
           int activeUsers = clientIn.readInt();
-          if (activeUsers == 0){
+          if (activeUsers == 0) {
             System.out.println("You're the only active user in chat room");
             break;
           }
@@ -102,10 +144,10 @@ public class Client {
           }
           break;
         case Identifiers.DIRECT_MESSAGE:
-            int sizeOfMsg = clientIn.readInt();
-            String receive = StringByteArrayTransfer.byteArrayToString(clientIn, sizeOfMsg);
-            System.out.println(receive);
-            break;
+          int sizeOfMsg = clientIn.readInt();
+          String receive = StringByteArrayTransfer.byteArrayToString(clientIn, sizeOfMsg);
+          System.out.println(receive);
+          break;
         case Identifiers.FAILED_MESSAGE:
           int failureMsgSize = clientIn.readInt();
           String failureMsg = StringByteArrayTransfer.byteArrayToString(clientIn, failureMsgSize);
@@ -113,44 +155,47 @@ public class Client {
           break;
       }
     }
-    //System.out.println("About to close socket...Good Bye!");
-    //socket.close();
   }
 
-  private void handleCmdFromUser(Client client) throws IOException {
+  /**
+   * Handle command typed in via terminal by users
+   * @param client current client connecting to the server
+   * @throws IOException throw an IO exception
+   */
+  public void handleCmdFromUser(Client client) throws IOException {
     //read user command from terminal
-    while (true){
+    while (true) {
       String cmd = "";
       System.out.println("Enter cmd: ");
       System.out.println("You can enter ? to see instruction of using chat room");
       cmd = scanner.nextLine();
       //String[] tokens = cmd.split(" ");
-      if (cmd.equals("?")){
+      if (cmd.equals("?")) {
         printMenu();
-      }else if (cmd.contains("login")){//one client can only log once
+      } else if (cmd.contains("login")) {//one client can only log once
         //handle login process
-        if (!this.logged){
+        if (!this.logged) {
           String[] tokens = cmd.split(" ", 2);
           client.handleLogin(tokens);
-        }else{
+        } else {
           System.out.println("You must log in before moving forward!!");
         }
-      }else if ((cmd.contains("logoff") || cmd.contains("quit")) && this.logged){
+      } else if ((cmd.contains("logoff") || cmd.contains("quit")) && this.logged) {
         //handle logoff process
         String[] tokens = cmd.split(" ");
         client.handleLogoff(tokens);
-      }else if(cmd.contains("@user") && this.logged){
+      } else if (cmd.contains("@user") && this.logged) {
         String[] tokens = cmd.split(" ", 3);
         client.handleDirectMsg(tokens);
-      }else if(cmd.contains("@all") && this.logged){
+      } else if (cmd.contains("@all") && this.logged) {
         String[] tokens = cmd.split(" ", 2);
         client.handleBroadcastMsg(tokens);
-      }else if (cmd.contains("who") && this.logged){
+      } else if (cmd.contains("who") && this.logged) {
         client.handleQueryUsers();
-      }else if (cmd.contains("!user") && this.logged){
+      } else if (cmd.contains("!user") && this.logged) {
         String[] tokens = cmd.split(" ", 2);
         client.handleInsultMsg(tokens);
-      }else{
+      } else {
         System.out.println("You must log in before moving forward!!");
       }
     }
@@ -182,11 +227,12 @@ public class Client {
 
   /**
    * Handle sending a broadcast msg request
+   *
    * @param tokens user input cmd
    */
   private void handleBroadcastMsg(String[] tokens) throws IOException {
     String msgBody = tokens[1];
-    String out = Identifiers.BROADCAST_MESSAGE + " "+ this.username.length() + " "
+    String out = Identifiers.BROADCAST_MESSAGE + " " + this.username.length() + " "
         + this.username + " " + msgBody.length() + " " + msgBody;
     this.clientOut.writeInt(Identifiers.BROADCAST_MESSAGE);
     this.clientOut.writeInt(this.username.length());
@@ -197,13 +243,15 @@ public class Client {
 
   /**
    * Handle sending a msg directly to specific user
+   *
    * @param tokens user input cmd
    */
   private void handleDirectMsg(String[] tokens) throws IOException {
     String recipient = tokens[1];
     String msgBody = tokens[2];//这里有问题，应该是tokens【1】之后的所有信息都要传给msgBody
     String out = Identifiers.DIRECT_MESSAGE + " " + this.username.length() + " "
-        + this.username + " " + recipient.length() + " " + recipient + " " + msgBody.length() + " " + msgBody;
+        + this.username + " " + recipient.length() + " " + recipient + " " + msgBody.length() + " "
+        + msgBody;
     this.clientOut.writeInt(Identifiers.DIRECT_MESSAGE);
     this.clientOut.writeInt(this.username.length());
     this.clientOut.writeChars(this.username);
@@ -216,6 +264,7 @@ public class Client {
 
   /**
    * Handle user logging off request
+   *
    * @param tokens user input cmd
    */
   private void handleLogoff(String[] tokens) throws IOException {
@@ -226,6 +275,7 @@ public class Client {
 
   /**
    * Handle user logging in request
+   *
    * @param tokens user input cmd
    */
   private void handleLogin(String[] tokens) throws IOException {
@@ -238,28 +288,11 @@ public class Client {
   }
 
   /**
-   * Print out this menu to ask users to input server name and port number
-   */
-  private static void checkInMenu(){
-    System.out.println("Enter server name and port number: ");
-  }
-
-  /**
-   * print out this instruction menu when user types in ?
-   */
-  private static void printMenu() {
-    System.out.println("logoff: sends a DISCONNECT_MESSAGE to the server");
-    System.out.println("who: sends a QUERY_CONNECTED_USERS to the server");
-    System.out.println("@user: sends a DIRECT_MESSAGE to the specified user to the server");
-    System.out.println("@all: sends a BROADCAST_MESSAGE to the server, to be sent to all users connected");
-    System.out.println("!user: sends a SEND_INSULT message to the server, to be sent to the specified user");
-  }
-
-  /**
    * Connect client to server
+   *
    * @return return true if it connects successfully otherwise return false
    */
-  private boolean connect(){
+  private boolean connect() {
     try {
       //create a socket connect to the server
       socket = new Socket(InetAddress.getByName(serverName), serverPort);

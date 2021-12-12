@@ -1,7 +1,6 @@
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -9,9 +8,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Server {
 
+  private static final int PORT_NUMBER = 8000;
   private ConcurrentHashMap<String, ServerThread> clientsMap;
   private ServerSocket serverSocket;
-  private static final int PORT_NUMBER = 8000;
 
   /**
    * Server class constructor.
@@ -22,6 +21,16 @@ public class Server {
   public Server(int port) throws IOException {
     this.serverSocket = new ServerSocket(port);
     this.clientsMap = new ConcurrentHashMap<>();
+  }
+
+  /**
+   * Main to start a server
+   *
+   * @param args user input set default null.
+   * @throws IOException throws if fail to initiate this server.
+   */
+  public static void main(String[] args) throws IOException {
+    new Server(PORT_NUMBER).run();
   }
 
   /**
@@ -36,7 +45,8 @@ public class Server {
   /**
    * Run this Server.
    *
-   * @throws IOException if fails to get accepted client or open sub-thread for new accepted client.
+   * @throws IOException if fails to get accepted client or open sub-thread for new accepted
+   *                     client.
    */
   public void run() throws IOException {
     System.out.println("Server starts running on port " + PORT_NUMBER);
@@ -51,18 +61,6 @@ public class Server {
       thread.start();
     }
   }
-
-  /**
-   * Main to start a server
-   *
-   * @param args user input set default null.
-   * @throws IOException throws if fail to initiate this server.
-   */
-  public static void main(String[] args) throws IOException {
-    new Server(PORT_NUMBER).run();
-  }
-
-
 
 
 }

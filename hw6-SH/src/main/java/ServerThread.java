@@ -1,4 +1,6 @@
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
 
 /**
@@ -15,7 +17,7 @@ public class ServerThread extends Thread {
   /**
    * Server class constructor.
    *
-   * @param s socket
+   * @param s      socket
    * @param server server
    * @throws IOException throws if fail to connect to this port and create server socket.
    */
@@ -27,29 +29,40 @@ public class ServerThread extends Thread {
     this.protocol = new Protocol(server.getClientsMap(), serverIn, serverOut);
   }
 
+  /**
+   * @return return protocol of the server thread
+   */
   public Protocol getProtocol() {
     return protocol;
   }
 
+  /**
+   * Execute thread
+   */
   @Override
-  public void run(){
+  public void run() {
     try {
       handleRequest();
     } catch (IOException e) {
       e.printStackTrace();
     }
   }
-  private void handleRequest() throws IOException{
-    while (s.isConnected()){
+
+  /**
+   * Handle request from client
+   * @throws IOException throw an IO exception
+   */
+  private void handleRequest() throws IOException {
+    while (s.isConnected()) {
       int identifiers = this.serverIn.readInt();
-      if (protocol.getUsername() == null){
+      if (protocol.getUsername() == null) {
         protocol.processInput(identifiers);
         this.server.getClientsMap().put(protocol.getUsername(), this);
-      }else{
+      } else {
         protocol.processInput(identifiers);
       }
       System.out.println("The protocol username is : " + protocol.getUsername());
-      System.out.println("The clientmap size is : " + this.server.getClientsMap().size());
+      System.out.println("The number of active users in total: " + this.server.getClientsMap().size());
     }
     System.out.println("Client " + protocol.getUsername() + " has left the chat room.");
   }

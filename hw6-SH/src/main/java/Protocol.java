@@ -7,21 +7,29 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 public class Protocol {
+
+  /**
+   * the number of maximum connections to server
+   */
+  public static final int MAXIMUM_CONNECTIONS = 10;
+  /**
+   * directory of current project
+   */
+  static final String dir = System.getProperty("user.dir");
   private String username;
   private ConcurrentHashMap<String, ServerThread> clientMap;
   private DataInputStream is;
   private DataOutputStream os;
-  public static final int MAXIMUM_CONNECTIONS = 10;
-  static final String dir = System.getProperty("user.dir");
 
   /**
    * Protocol class constructor.
    *
    * @param clientMap a ConcurrentHashMap contains all info on connected clients.
-   * @param is       server input stream.
-   * @param os       server output stream.
+   * @param is        server input stream.
+   * @param os        server output stream.
    */
-  public Protocol(ConcurrentHashMap<String, ServerThread> clientMap, DataInputStream is, DataOutputStream os) {
+  public Protocol(ConcurrentHashMap<String, ServerThread> clientMap, DataInputStream is,
+      DataOutputStream os) {
     this.clientMap = clientMap;
     this.is = is;
     this.os = os;
@@ -73,7 +81,7 @@ public class Protocol {
    * @throws IOException handles all messages that in incorrect format.
    */
   public void processInput(int identifier) throws IOException {
-    switch (identifier){
+    switch (identifier) {
       case Identifiers.CONNECT_MESSAGE:
         handleLogin();
         break;
@@ -87,25 +95,25 @@ public class Protocol {
         handleDirectMsg();
         break;
       case Identifiers.BROADCAST_MESSAGE:
-          handleBroadcastMsg();
-          break;
+        handleBroadcastMsg();
+        break;
       case Identifiers.SEND_INSULT:
-          handleInsultMsg();
-          break;
+        handleInsultMsg();
+        break;
     }
   }
 
-
-
-
+  /**
+   * Process login request from client and send response back.
+   */
   private void handleLogin() throws IOException {
     int sizeOfUser = is.readInt();
     String username = StringByteArrayTransfer.byteArrayToString(is, sizeOfUser);
     String out;
     boolean isConnected = false;
-    if (this.clientMap.containsKey(username.toString()))
+    if (this.clientMap.containsKey(username.toString())) {
       out = "Username has been used.";
-    else {
+    } else {
       int size = this.clientMap.size();
       if (size < MAXIMUM_CONNECTIONS) {
         setUsername(username.toString());
@@ -121,14 +129,17 @@ public class Protocol {
     os.writeChars(out);
   }
 
+  /**
+   * Process logoff request from client and send response back.
+   */
   private void handleLogoff() throws IOException {
     int sizeOfUsername = is.readInt();
     String username = StringByteArrayTransfer.byteArrayToString(is, sizeOfUsername);
     String out;
     boolean isDisconnected = false;
-    if (!this.clientMap.containsKey(username.toString()))
+    if (!this.clientMap.containsKey(username.toString())) {
       out = "User doesn't exist.";
-    else {
+    } else {
       this.setClientMap(username.toString());
       this.setUsername(null);
       out = "You are no longer connected";
@@ -140,28 +151,31 @@ public class Protocol {
     os.writeChars(out);
   }
 
+  /**
+   * Process querying users request from client and send response back.
+   */
   private void handleQueryUsers() throws IOException {
     int sizeOfName = is.readInt();
     //person who is requesting
     String queryName = StringByteArrayTransfer.byteArrayToString(is, sizeOfName);
     boolean found = false;
-    for (String s: this.clientMap.keySet()) {
+    for (String s : this.clientMap.keySet()) {
       if (s.equals(queryName.toString())) {
         found = true;
         break;
       }
     }
-    if (!found){
+    if (!found) {
       os.writeInt(Identifiers.FAILED_MESSAGE);
       String out = "Non-exist username";
       os.writeInt(out.length());
       os.writeChars(out);
-    }else{
+    } else {
       Set<String> activeUsers = this.clientMap.keySet();
       os.writeInt(Identifiers.QUERY_USER_RESPONSE);
       os.writeInt(activeUsers.size() - 1);//deduct the person who is requesting himself
-      for (String user : activeUsers){
-        if (user.equals(queryName)){
+      for (String user : activeUsers) {
+        if (user.equals(queryName)) {
           continue;
         }
         os.writeInt(user.length());
@@ -170,7 +184,9 @@ public class Protocol {
     }
   }
 
-
+  /**
+   * Process sending direct message request from client and send response back.
+   */
   private void handleDirectMsg() throws IOException {
     int sizeOfSender = is.readInt();
     String senderName = StringByteArrayTransfer.byteArrayToString(is, sizeOfSender);
@@ -178,21 +194,27 @@ public class Protocol {
     String recipientName = StringByteArrayTransfer.byteArrayToString(is, sizeOfRecipient);
     int lengthOfMsg = is.readInt();
     String msgBody = StringByteArrayTransfer.byteArrayToString(is, lengthOfMsg);
-    if (!this.clientMap.containsKey(senderName) || !this.clientMap.containsKey(recipientName)){
+    if (!this.clientMap.containsKey(senderName) || !this.clientMap.containsKey(recipientName)) {
       os.writeInt(Identifiers.FAILED_MESSAGE);
       String out = "Fail to send message, plz check you've logged in and using valid recipient name";
       os.writeInt(out.length());
       os.writeChars(out);
-    }else{
+    } else {
       ServerThread serverThread = this.clientMap.get(recipientName);
       serverThread.getProtocol().sentMsg(senderName, msgBody);
       os.writeInt(Identifiers.DIRECT_MESSAGE);
-      String out = "message sent successful";
+      String out = "message sent successfully";
       os.writeInt(out.length());
       os.writeChars(out);
     }
   }
 
+  /**
+   * Send a message to someone
+   * @param sender sender name as string
+   * @param msgBody message body as string
+   * @throws IOException throw an IO exception
+   */
   private void sentMsg(String sender, String msgBody) throws IOException {
     os.writeInt(Identifiers.DIRECT_MESSAGE);
     String out = "You got a message from " + sender + " : " + msgBody;
@@ -200,6 +222,9 @@ public class Protocol {
     os.writeChars(out);
   }
 
+  /**
+   * Process sending broadcast message request from client and send response back.
+   */
   private void handleBroadcastMsg() throws IOException {
     int sizeOfSenderName = is.readInt();
     String senderName = StringByteArrayTransfer.byteArrayToString(is, sizeOfSenderName);
@@ -218,13 +243,15 @@ public class Protocol {
         serverThread.getProtocol().sentMsg(senderName, msgBody);
       }
       os.writeInt(Identifiers.DIRECT_MESSAGE);
-      String out = "message sent successful";
+      String out = "message sent successfully";
       os.writeInt(out.length());
       os.writeChars(out);
     }
   }
 
-
+  /**
+   * Process sending insult message request from client and send response back.
+   */
   private void handleInsultMsg() throws IOException {
     int sizeOfSender = is.readInt();
     String senderName = StringByteArrayTransfer.byteArrayToString(is, sizeOfSender);
@@ -237,21 +264,18 @@ public class Protocol {
     RandomSentenceGenerator generator = new RandomSentenceGenerator(grammar);
     String insultBody = generator.generateASentence(random);
     //String insultBody = "You're trash";
-    if (!this.clientMap.containsKey(senderName) || !this.clientMap.containsKey(recipientName)){
+    if (!this.clientMap.containsKey(senderName) || !this.clientMap.containsKey(recipientName)) {
       os.writeInt(Identifiers.FAILED_MESSAGE);
       String out = "Fail to send message, plz check you've logged in and using valid recipient name";
       os.writeInt(out.length());
       os.writeChars(out);
-    }else{
+    } else {
       ServerThread serverThread = this.clientMap.get(recipientName);
       serverThread.getProtocol().sentMsg(senderName, insultBody);
       os.writeInt(Identifiers.DIRECT_MESSAGE);
-      String out = "message sent successful";
+      String out = "message sent successfully";
       os.writeInt(out.length());
       os.writeChars(out);
     }
   }
-
-
-
 }
