@@ -8,7 +8,8 @@ public class StringByteArrayTransfer {
 
   /**
    * Used to transfer from byte array to string with a given input stream and a fixed size
-   * @param is input stream
+   *
+   * @param is   input stream
    * @param size size of the final output string
    * @return string built by data from input stream
    * @throws IOException throw an IO exception

@@ -5,7 +5,9 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-
+/**
+ * To represent protocol communicating between client and server
+ */
 public class Protocol {
 
   /**
@@ -211,7 +213,8 @@ public class Protocol {
 
   /**
    * Send a message to someone
-   * @param sender sender name as string
+   *
+   * @param sender  sender name as string
    * @param msgBody message body as string
    * @throws IOException throw an IO exception
    */

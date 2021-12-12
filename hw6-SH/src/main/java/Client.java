@@ -24,6 +24,7 @@ public class Client {
 
   /**
    * Client constructor
+   *
    * @param serverName server name
    * @param serverPort server port number
    */
@@ -35,6 +36,7 @@ public class Client {
 
   /**
    * Entrance of the client.
+   *
    * @param args users input from terminal
    */
   public static void main(String[] args) {
@@ -75,6 +77,7 @@ public class Client {
 
   /**
    * UI thread is used to listening to command from terminal
+   *
    * @param client the client
    */
   private void startUIThread(Client client) {
@@ -110,6 +113,7 @@ public class Client {
 
   /**
    * Handle response from server based on protocol
+   *
    * @throws IOException throw an IO exception
    */
   private void handleResponseFromServer() throws IOException {
@@ -126,7 +130,7 @@ public class Client {
           success = clientIn.readBoolean();
           msgSize = clientIn.readInt();
           msgBody = StringByteArrayTransfer.byteArrayToString(clientIn, msgSize);
-          if (success){
+          if (success) {
             System.out.println("Response from server: " + msgBody);
             this.logged = false;
           }
@@ -159,6 +163,7 @@ public class Client {
 
   /**
    * Handle command typed in via terminal by users
+   *
    * @param client current client connecting to the server
    * @throws IOException throw an IO exception
    */
@@ -203,6 +208,7 @@ public class Client {
 
   /**
    * Send a random insult to recipient
+   *
    * @param tokens user input cmd
    */
   private void handleInsultMsg(String[] tokens) throws IOException {

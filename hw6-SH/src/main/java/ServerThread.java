@@ -50,6 +50,7 @@ public class ServerThread extends Thread {
 
   /**
    * Handle request from client
+   *
    * @throws IOException throw an IO exception
    */
   private void handleRequest() throws IOException {
@@ -62,7 +63,8 @@ public class ServerThread extends Thread {
         protocol.processInput(identifiers);
       }
       System.out.println("The protocol username is : " + protocol.getUsername());
-      System.out.println("The number of active users in total: " + this.server.getClientsMap().size());
+      System.out.println(
+          "The number of active users in total: " + this.server.getClientsMap().size());
     }
     System.out.println("Client " + protocol.getUsername() + " has left the chat room.");
   }

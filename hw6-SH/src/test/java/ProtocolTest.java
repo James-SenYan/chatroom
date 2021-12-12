@@ -31,22 +31,6 @@ class ProtocolTest {
   }
 
   @Test
-  void getUsername() {
-  }
-
-  @Test
-  void setUsername() {
-  }
-
-  @Test
-  void getClientMap() {
-  }
-
-  @Test
-  void setClientMap() {
-  }
-
-  @Test
   void processInput() throws IOException {
     //mockProtocol.processInput(Identifiers.CONNECT_MESSAGE);
     String out = "Hello, aha" + ". There are 0" + " other connected clients.";
