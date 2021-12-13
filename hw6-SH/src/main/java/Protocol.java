@@ -6,7 +6,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * To represent protocol communicating between client and server
+ * To represent the protocol which is used to communicate between server and clients.
  */
 public class Protocol {
 
@@ -138,17 +138,14 @@ public class Protocol {
     int sizeOfUsername = is.readInt();
     String username = StringByteArrayTransfer.byteArrayToString(is, sizeOfUsername);
     String out;
-    boolean isDisconnected = false;
     if (!this.clientMap.containsKey(username.toString())) {
       out = "User doesn't exist.";
     } else {
       this.setClientMap(username.toString());
       this.setUsername(null);
       out = "You are no longer connected";
-      isDisconnected = true;
     }
     os.writeInt(Identifiers.DISCONNECT_RESPONSE);
-    os.writeBoolean(isDisconnected);
     os.writeInt(out.length());
     os.writeChars(out);
   }

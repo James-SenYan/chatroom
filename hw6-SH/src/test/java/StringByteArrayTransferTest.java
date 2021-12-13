@@ -19,7 +19,7 @@ class StringByteArrayTransferTest {
   }
 
   @Test
-  void byteArrayToString(){
+  void byteArrayToString() {
     String s = null;
     try {
       s = StringByteArrayTransfer.byteArrayToString(is, 2);

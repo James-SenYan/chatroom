@@ -1,5 +1,3 @@
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -28,6 +26,22 @@ class ProtocolTest {
     dis = new DataInputStream(byteArrayInputStream);
     dos = new DataOutputStream(byteArrayOutputStream);
     mockProtocol = new Protocol(clientMap, dis, dos);
+  }
+
+  @Test
+  void getUsername() {
+  }
+
+  @Test
+  void setUsername() {
+  }
+
+  @Test
+  void getClientMap() {
+  }
+
+  @Test
+  void setClientMap() {
   }
 
   @Test
