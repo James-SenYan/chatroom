@@ -7,19 +7,16 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class ClientTest {
 
-  private Client mockClient;
   private Server server;
   private DataInputStream dis;
   private DataOutputStream dos;
-  private ServerThread serverThread;
 
-  @BeforeEach
-  void setUp() throws IOException, InterruptedException {
+  @Test
+  void test1() throws IOException, InterruptedException {
     //mock a server
     String text = """
         localhost
@@ -27,14 +24,18 @@ class ClientTest {
         ？
         who
         login sen
+        ?
         who
         @all hello
         @user sen hello
+        @user james hello
         logoff
-        login sen
+        login haoyu
         !user haoyu
+        !user james
         @user haoyu hello
         @all hello
+        login aha
         """;
 
     InputStream stream = new ByteArrayInputStream(text.getBytes());
@@ -42,12 +43,10 @@ class ClientTest {
     PrintStream ps = new PrintStream(out);
     dos = new DataOutputStream(out);
     System.setIn(stream);
-    //System.setOut(ps);
+    System.setOut(ps);
     dis = new DataInputStream(stream);
     startServer();
-    System.out.println("*****");
     Client.main(new String[]{});
-    //mockClient = new Client("localhost", 8000);
     //startClient();
     String standardOut = "19 3 sen";
     assertNotEquals(standardOut, out.toString());
@@ -88,14 +87,5 @@ class ClientTest {
     };
     thread.start();
   }
-
-
-  @Test
-  void main() throws IOException {
-
-    //mockClient.handleCmdFromUser(mockClient);
-    //assertEquals(standardOut, out.toString());
-  }
-
 
 }
