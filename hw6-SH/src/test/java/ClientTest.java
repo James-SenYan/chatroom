@@ -34,16 +34,14 @@ class ClientTest {
     String text = """
     localhost
     8000
-    ?
+    ？
     who
     login sen
     who
     @all hello
     @user sen hello
-    @user haoyu hello
     logoff
-    who
-    login haoyu
+    login sen
     !user haoyu
     @user haoyu hello
     @all hello
@@ -105,7 +103,6 @@ class ClientTest {
       }
     };
     thread.start();
-    thread.join(5000);
   }
 
 

@@ -122,19 +122,19 @@ public class Client {
       switch (identifier) {
         case Identifiers.CONNECT_RESPONSE:
           boolean success = clientIn.readBoolean();
-          if (success){
-            this.logged = true;
-          }
+          this.logged = true;
           int msgSize = clientIn.readInt();
           String msgBody = StringByteArrayTransfer.byteArrayToString(clientIn, msgSize);
           System.out.println("Response from server: " + msgBody);
           break;
         case Identifiers.DISCONNECT_RESPONSE:
-          //success = clientIn.readBoolean();
+          success = clientIn.readBoolean();
           msgSize = clientIn.readInt();
           msgBody = StringByteArrayTransfer.byteArrayToString(clientIn, msgSize);
-          System.out.println("Response from server: " + msgBody);
-          this.logged = false;
+          if (success) {
+            System.out.println("Response from server: " + msgBody);
+            this.logged = false;
+          }
           break;
         case Identifiers.QUERY_USER_RESPONSE:
           int activeUsers = clientIn.readInt();
@@ -255,7 +255,7 @@ public class Client {
    */
   private void handleDirectMsg(String[] tokens) throws IOException {
     String recipient = tokens[1];
-    String msgBody = tokens[2];//这里有问题，应该是tokens【1】之后的所有信息都要传给msgBody
+    String msgBody = tokens[2];
     String out = Identifiers.DIRECT_MESSAGE + " " + this.username.length() + " "
         + this.username + " " + recipient.length() + " " + recipient + " " + msgBody.length() + " "
         + msgBody;
