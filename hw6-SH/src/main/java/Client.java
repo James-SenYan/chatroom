@@ -122,18 +122,19 @@ public class Client {
       switch (identifier) {
         case Identifiers.CONNECT_RESPONSE:
           boolean success = clientIn.readBoolean();
+          if (success){
+            this.logged = true;
+          }
           int msgSize = clientIn.readInt();
           String msgBody = StringByteArrayTransfer.byteArrayToString(clientIn, msgSize);
           System.out.println("Response from server: " + msgBody);
           break;
         case Identifiers.DISCONNECT_RESPONSE:
-          success = clientIn.readBoolean();
+          //success = clientIn.readBoolean();
           msgSize = clientIn.readInt();
           msgBody = StringByteArrayTransfer.byteArrayToString(clientIn, msgSize);
-          if (success) {
-            System.out.println("Response from server: " + msgBody);
-            this.logged = false;
-          }
+          System.out.println("Response from server: " + msgBody);
+          this.logged = false;
           break;
         case Identifiers.QUERY_USER_RESPONSE:
           int activeUsers = clientIn.readInt();
@@ -285,7 +286,6 @@ public class Client {
    * @param tokens user input cmd
    */
   private void handleLogin(String[] tokens) throws IOException {
-    this.logged = true;
     String username = tokens[1];
     this.username = username;
     this.clientOut.writeInt(Identifiers.CONNECT_MESSAGE);
